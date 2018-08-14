@@ -1,0 +1,3 @@
+-e git+https://github.com/dtkav/connexion@4e315199dd61804c3bd131024dbb775bf92abb82
+python_dateutil == 2.6.0
+setuptools >= 21.0.0
