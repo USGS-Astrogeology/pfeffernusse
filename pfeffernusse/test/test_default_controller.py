@@ -18,11 +18,11 @@ class TestDefaultController(BaseTestCase):
 
         Converts Image Labels to ISDs
         """
-        request_isd = RequestISD()
+        label = RequestISD()
         response = self.client.open(
             '/v1/pds/',
             method='POST',
-            data=json.dumps(request_isd),
+            data=json.dumps(label),
             content_type='application/json')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
