@@ -33,7 +33,6 @@ def get_isd(label, config):
             messenger_mk = mk
 
     spice.furnsh(messenger_mk)
-    path, tpe, handle, found = spice.kdata(0,'TEXT')
 
     # Spice likes ids over names, so grab the ids from the names
     spacecraft_id = spice.bods2c(spacecraft_name)
@@ -43,30 +42,14 @@ def get_isd(label, config):
     reference_frame = 'IAU_{}'.format(target_name)
 
     isd = {}
-    # isd['instrument_id'] = instrument_id
-    # isd['target_name'] = target_name
-    # isd['spacecraft_name'] = spacecraft_id
 
     rad = spice.bodvrd(target_name, 'RADII', 3)
     isd['semimajor'] = rad[1][0] * 1000
     isd['semiminor'] = rad[1][1] * 1000
 
-    # CSM radial distortion still need some figuring out, for now, pad out to 7 element array
-    # By the kernel docs, this array only covers c1, c2, & c4
-
-    # Should work by getting the type of distortion and packaging into the correct object
-    # (radial, transverse, guassian whatever-the-fuck)
     isd['optical_distortion'] = {}
     odk_mssgr = spice.gdpool('INS{}_OD_T_Y'.format(ikid),0, 10)
-    odk = [0]*5
-    odk[1] = odk_mssgr[0]
-    odk[2] = odk_mssgr[1]
-    odk[4] = odk_mssgr[2]
-
-    isd['optical_distortion']['coefficients'] = odk
-
-    # Jesse needs to look into how to use this key
-    isd['optical_distortion']['radial'] = 'radial'
+    isd['optical_distortion']['coefficients'] = list(odk_mssgr)
 
     isd['focal2pixel_samples'] = list(spice.gdpool('INS{}_TRANSX'.format(ikid), 0, 3))
     isd['focal2pixel_lines'] = list(spice.gdpool('INS{}_TRANSY'.format(ikid), 0, 3))
@@ -78,14 +61,8 @@ def get_isd(label, config):
     isd['image_lines'] = int(spice.gipool('INS{}_PIXEL_LINES'.format(ikid), 0, 1)[0])
     isd['image_samples'] = int(spice.gipool('INS{}_PIXEL_SAMPLES'.format(ikid), 0, 1)[0])
 
-    try:
-        isd['starting_detector_sample'] = int(spice.gdpool('INS{}_FPUBIN_START_SAMPLE'.format(ikid), 0, 1)[0])
-    except:
-        isd['starting_detector_sample'] = 0
-    try:
-        isd['starting_detector_line'] = int(spice.gdpool('INS{}_FPUBIN_START_LINE'.format(ikid), 0, 1)[0])
-    except:
-        isd['starting_detector_line'] = 0
+    isd['starting_detector_sample'] = int(spice.gdpool('INS{}_FPUBIN_START_SAMPLE'.format(ikid), 0, 1)[0])
+    isd['starting_detector_line'] = int(spice.gdpool('INS{}_FPUBIN_START_LINE'.format(ikid), 0, 1)[0])
 
     # Now time
     sclock = label['SPACECRAFT_CLOCK_START_COUNT']
