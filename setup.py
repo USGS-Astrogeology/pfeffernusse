@@ -3,7 +3,7 @@
 import sys
 from setuptools import setup, find_packages
 
-NAME = "openapi_server"
+NAME = "pfeffernusse"
 VERSION = "1.0.0"
 
 # To install the library, run the following
@@ -21,13 +21,13 @@ setup(
     description="Pfeffernusse",
     author_email="jlaura@usgs.gov",
     url="",
-    keywords=["OpenAPI", "Pfeffernusse"],
+    keywords=["Swagger", "Pfeffernusse"],
     install_requires=REQUIRES,
     packages=find_packages(),
-    package_data={'': ['openapi/openapi.yaml']},
+    package_data={'': ['swagger/swagger.yaml']},
     include_package_data=True,
     entry_points={
-        'console_scripts': ['openapi_server=openapi_server.__main__:main']},
+        'console_scripts': ['pfeffernusse=pfeffernusse.__main__:main']},
     long_description="""\
     A SpiceAPI for extracting NAIF Spice Data
     """
