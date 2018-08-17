@@ -1,11 +1,11 @@
-FROM python:3-alpine
+FROM continuumio/miniconda
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 COPY requirements.txt /usr/src/app/
 
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN conda config --add channels conda-forge && conda install --yes --file requirements.txt
 
 COPY . /usr/src/app
 
