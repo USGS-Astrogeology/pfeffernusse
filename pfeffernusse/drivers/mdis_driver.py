@@ -1,9 +1,9 @@
-from plio.io.io_gdal import GeoDataset
-import pvl
 from glob import glob
+import os
+
+import pvl
 import spiceypy as spice
 
-import os
 
 
 def get_isd(label, config):
