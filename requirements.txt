@@ -1,5 +1,5 @@
 connexion 
-dateutil
+python-dateutil
 setuptools
 pvl
 spiceypy
