@@ -1,12 +1,6 @@
-FROM frolvlad/alpine-glibc
+FROM python:3.6-slim-jessie
 
-RUN apk add --no-cache python3-dev gcc musl-dev libffi-dev openssl-dev && \
-    python3 -m ensurepip && \
-    rm -r /usr/lib/python*/ensurepip && \
-    pip3 install --upgrade pip setuptools && \
-    if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi && \
-    if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
-    rm -r /root/.cache 
+RUN apt-get update && apt-get -y install binutils gcc make
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
@@ -19,6 +13,6 @@ COPY . /usr/src/app
 
 EXPOSE 8080
 
-ENTRYPOINT ["python3"]
+ENTRYPOINT ["python"]
 
 CMD ["-m", "pfeffernusse"]
