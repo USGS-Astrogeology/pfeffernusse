@@ -60,6 +60,8 @@ First, create a file called mdis_lable.json with the following content.
 Once created, execute the following:
 `curl -X POST "http://pfeffer.wr.usgs.gov/v1/pds/" -H  "accept: application/json" -H  "Content-Type: application/json" -d @mdis_label.json`
 
+Alternatively, if you have [httpie](https://httpie.org/) instsalled (you probably should). You can execute the more human readable form: `http POST pfeffer.wr.usgs.gov/v1/pds/ @sample.json`
+
 The result should be a CSM compliant ISD file, e.g.:
 
 ```json
