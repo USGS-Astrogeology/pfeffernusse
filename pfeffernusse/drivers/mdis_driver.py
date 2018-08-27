@@ -3,8 +3,19 @@ import os
 
 import pvl
 import spiceypy as spice
+import numpy as np
 
 from pfeffernusse import config
+
+def focal_length_from_temp(focal_plane_tempature, coeffs):
+    """
+    """
+    # reverse coeffs, mdis coeffs are listed a_0, a_1, a_2 ... a_n where
+    # numpy wants them a_n, a_n-1, a_n-2 ... a_0
+    f_t = np.poly1d(coeffs[::-1])
+
+    # eval at the focal_plane_tempature
+    return f_t(focal_plane_tempature)
 
 
 def get_isd(label):
@@ -45,20 +56,28 @@ def get_isd(label):
     isd = {}
 
     rad = spice.bodvrd(target_name, 'RADII', 3)
-    isd['semimajor'] = rad[1][0] * 1000
-    isd['semiminor'] = rad[1][1] * 1000
+    isd['radii'] = {}
+    isd['radii']['semimajor'] = rad[1][0]
+    isd['radii']['semiminor'] = rad[1][1]
 
     isd['optical_distortion'] = {}
-    odk_mssgr = spice.gdpool('INS{}_OD_T_Y'.format(ikid),0, 10)
-    isd['optical_distortion']['coefficients'] = list(odk_mssgr)
+    odk_mssgr_x = spice.gdpool('INS{}_OD_T_X'.format(ikid),0, 10)
+    odk_mssgr_y = spice.gdpool('INS{}_OD_T_Y'.format(ikid),0, 10)
+
+    isd['optical_distortion']['x'] = list(odk_mssgr_x)
+    isd['optical_distortion']['y'] = list(odk_mssgr_y)
 
     isd['focal2pixel_samples'] = list(spice.gdpool('INS{}_TRANSX'.format(ikid), 0, 3))
     isd['focal2pixel_lines'] = list(spice.gdpool('INS{}_TRANSY'.format(ikid), 0, 3))
 
     # Load information from the IK kernel
     isd['focal_length_model'] = {}
-    isd['focal_length_model']['focal_length'] = float(spice.gdpool('INS{}_FOCAL_LENGTH'.format(ikid), 0, 1)[0])
+
+    focal_legnth_coeffs = spice.gdpool('INS{}_FL_TEMP_COEFFS '.format(ikid), 0, 5)
+    isd['focal_length_model']['focal_length'] = focal_length_from_temp(label['FOCAL_PLANE_TEMPERATURE'].value, focal_legnth_coeffs)
+
     isd['focal_length_model']['focal_length_epsilon'] = float(spice.gdpool('INS{}_FL_UNCERTAINTY'.format(ikid), 0, 1)[0])
+
     isd['image_lines'] = int(spice.gipool('INS{}_PIXEL_LINES'.format(ikid), 0, 1)[0])
     isd['image_samples'] = int(spice.gipool('INS{}_PIXEL_SAMPLES'.format(ikid), 0, 1)[0])
 
@@ -92,7 +111,6 @@ def get_isd(label):
 
     # Get the Sensor Position
     loc, _ = spice.spkpos(target_name, et, reference_frame, 'LT+S', spacecraft_name)
-    loc *= -1000
 
     isd['sensor_location'] = {}
     isd['sensor_location']['x'] = loc[0]
@@ -109,9 +127,9 @@ def get_isd(label):
                                        target_name)
 
     isd['sensor_velocity'] = {}
-    isd['sensor_velocity']['x'] = v_state[3] * 1000
-    isd['sensor_velocity']['y'] = v_state[4] * 1000
-    isd['sensor_velocity']['z'] = v_state[5] * 1000
+    isd['sensor_velocity']['x'] = v_state[3]
+    isd['sensor_velocity']['y'] = v_state[4]
+    isd['sensor_velocity']['z'] = v_state[5]
     isd['sensor_velocity']['unit'] = 'm'
     isd['reference_height'] = {}
     isd['reference_height']['minheight'] = label.get('min_valid_height' ,-8000)
@@ -127,17 +145,17 @@ def get_isd(label):
                                  target_name)
 
     # Get the sun position, convert to meters
-    xpos, ypos, zpos = [e.value*1000 for e in label['SC_SUN_POSITION_VECTOR']]
-    xvel, yvel, zvel = [e.value*1000 for e in label['SC_SUN_VELOCITY_VECTOR']]
+    xpos, ypos, zpos = [e.value for e in label['SC_SUN_POSITION_VECTOR']]
+    xvel, yvel, zvel = [e.value for e in label['SC_SUN_VELOCITY_VECTOR']]
 
     # lighttime should always be off
     isd['sun_position'] = {}
-    isd['sun_position']['x'] = sun_state[0] * 1000
-    isd['sun_position']['y'] = sun_state[1] * 1000
-    isd['sun_position']['z'] = sun_state[2] * 1000
+    isd['sun_position']['x'] = sun_state[0]
+    isd['sun_position']['y'] = sun_state[1]
+    isd['sun_position']['z'] = sun_state[2]
 
     isd['sun_velocity'] = {}
-    isd['sun_velocity']['x'] = sun_state[3] * 1000
-    isd['sun_velocity']['y'] = sun_state[4] * 1000
-    isd['sun_velocity']['z'] = sun_state[5] * 1000
+    isd['sun_velocity']['x'] = sun_state[3]
+    isd['sun_velocity']['y'] = sun_state[4]
+    isd['sun_velocity']['z'] = sun_state[5]
     return isd
