@@ -4,9 +4,10 @@ import os
 import pvl
 import spiceypy as spice
 
+from pfeffernusse import config
 
 
-def get_isd(label, config):
+def get_isd(label):
     """
     TODO: This function (and all like it) needs to open with some robust method to make sure this is
           in fact an MDIS label.
@@ -19,9 +20,9 @@ def get_isd(label, config):
         'MERCURY DUAL IMAGING SYSTEM WIDE ANGLE CAMERA':'MSGR_MDIS_WAC'
     }
 
-
-    mks = sorted(glob(config.metakernals_dir+'/*.tm'))
-
+    metakernel_dir = config.mdis
+    mks = sorted(glob(os.path.join(metakernel_dir,'*.tm')))
+ 
     instrument_id = instrument_name[label['INSTRUMENT_ID']]
     spacecraft_name = label['MISSION_NAME']
     target_name = label['TARGET_NAME']
