@@ -15,26 +15,31 @@ class ISD200Radii(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, semimajor: float=None, semiminor: float=None):  # noqa: E501
+    def __init__(self, semimajor: float=None, semiminor: float=None, units: str=None):  # noqa: E501
         """ISD200Radii - a model defined in Swagger
 
         :param semimajor: The semimajor of this ISD200Radii.  # noqa: E501
         :type semimajor: float
         :param semiminor: The semiminor of this ISD200Radii.  # noqa: E501
         :type semiminor: float
+        :param units: The units of this ISD200Radii.  # noqa: E501
+        :type units: str
         """
         self.swagger_types = {
             'semimajor': float,
-            'semiminor': float
+            'semiminor': float,
+            'units': str
         }
 
         self.attribute_map = {
             'semimajor': 'semimajor',
-            'semiminor': 'semiminor'
+            'semiminor': 'semiminor',
+            'units': 'units'
         }
 
         self._semimajor = semimajor
         self._semiminor = semiminor
+        self._units = units
 
     @classmethod
     def from_dict(cls, dikt) -> 'ISD200Radii':
@@ -90,3 +95,24 @@ class ISD200Radii(Model):
         """
 
         self._semiminor = semiminor
+
+    @property
+    def units(self) -> str:
+        """Gets the units of this ISD200Radii.
+
+
+        :return: The units of this ISD200Radii.
+        :rtype: str
+        """
+        return self._units
+
+    @units.setter
+    def units(self, units: str):
+        """Sets the units of this ISD200Radii.
+
+
+        :param units: The units of this ISD200Radii.
+        :type units: str
+        """
+
+        self._units = units
