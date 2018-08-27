@@ -157,9 +157,12 @@ definitions:
             type: number
           semiminor:
             type: number
+          units:
+            type: string
         example:
           semimajor: 339600.2
           semiminor: 337600.2
+          units: meters
       optical_distortion:
           $ref: '#/definitions/optical_distortion'
       starting_detector_sample:

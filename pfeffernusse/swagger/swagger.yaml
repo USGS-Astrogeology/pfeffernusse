@@ -1,8 +1,5 @@
 ---
 swagger: "2.0"
-schemes:
-  - http
-  - https
 info:
   description: "A SpiceAPI for extracting NAIF Spice Data"
   version: "0.1.2"
@@ -14,6 +11,8 @@ info:
     url: "http://unlicense.org/"
 host: "localhost:8080"
 basePath: "/v1"
+schemes:
+- "http"
 paths:
   /pds/:
     post:
@@ -295,7 +294,7 @@ definitions:
       dt_ephemeris: 9.3693102714106686335071572102606296539306640625
       interpolation_method: "lagrange"
       starting_detector_line: 4.1456080298839363962315474054776132106781005859375
-      radii: "{\"semimajor\":339600.2,\"semiminor\":337600.2}"
+      radii: "{\"semimajor\":339600.2,\"semiminor\":337600.2,\"units\":\"meters\"}"
       starting_ephemeris_time: 6.02745618307040320615897144307382404804229736328125
   optical_distortion_transverse:
     properties:
@@ -365,8 +364,10 @@ definitions:
         type: "number"
       semiminor:
         type: "number"
+      units:
+        type: "string"
     description: "The radii of the target in meters."
-    example: "{\"semimajor\":339600.2,\"semiminor\":337600.2}"
+    example: "{\"semimajor\":339600.2,\"semiminor\":337600.2,\"units\":\"meters\"}"
   ISD200_reference_height:
     required:
     - "maxheight"
