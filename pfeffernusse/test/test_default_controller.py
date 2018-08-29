@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from pfeffernusse.models.data import Data  # noqa: E501
 from pfeffernusse.models.isd200 import ISD200  # noqa: E501
 from pfeffernusse.models.request_isd import RequestISD  # noqa: E501
 from pfeffernusse.test import BaseTestCase
@@ -21,9 +22,35 @@ class TestDefaultController(BaseTestCase):
         label = RequestISD()
         response = self.client.open(
             '/v1/pds/',
-            method='POST',
+            method='GET',
             data=json.dumps(label),
             content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_get_metakernel(self):
+        """Test case for get_metakernel
+
+        Get a specific kernel
+        """
+        query_string = [('mission', 'mission_example'),
+                        ('year', 'year_example'),
+                        ('version', 'latest')]
+        response = self.client.open(
+            '/v1/metalkernels/',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_metakernel_catalog(self):
+        """Test case for metakernel_catalog
+
+        Access Product Information
+        """
+        response = self.client.open(
+            '/v1/metakernels/catalog/',
+            method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

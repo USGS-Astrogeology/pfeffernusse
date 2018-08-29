@@ -1,2 +1,4 @@
-pfeffernusse/__init__.py
-pfeffernusse/controller/isd.py
+**/__init__.py
+**/__main__.py
+**/isd.py
+Dockerfile
