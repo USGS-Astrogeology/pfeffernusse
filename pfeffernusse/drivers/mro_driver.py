@@ -32,14 +32,14 @@ def get_isd(label):
     reference_frame = 'IAU_{}'.format(target_name)
     
     # Instrument / Spacecraft Metadata
-    isd['OPTICAL_DIST_COEF'] = spice.gdpool('INS{}_OD_K'.format(ikid),0, 3)
+    isd['OPTICAL_DIST_COEF'] = [0,0,0] # spice.gdpool('INS{}_OD_K'.format(ikid),0, 3)
     isd['ITRANSL'] = spice.gdpool('INS{}_ITRANSL'.format(ikid), 0, 3)
     isd['ITRANSS'] = spice.gdpool('INS{}_ITRANSS'.format(ikid), 0, 3)
     isd['DETECTOR_SAMPLE_ORIGIN'] = spice.gdpool('INS{}_BORESIGHT_SAMPLE'.format(ikid), 0, 1)
     isd['DETECTOR_LINE_ORIGIN'] = spice.gdpool('INS{}_BORESIGHT_LINE'.format(ikid), 0, 1)
     isd['DETECTOR_SAMPLE_SUMMING'] = label['SAMPLING_FACTOR']
     isd['DETECTOR_SAMPLE_SUMMING'] = label['SAMPLING_FACTOR']
-    isd['STARTING_SAMPLE'] = label['SAMPLE_FIRST_PIXEL']
+    isd['STARTING_SAMPLE'] = 0  # label['SAMPLE_FIRST_PIXEL']
     isd['TOTAL_LINES'] = nlines =  label['IMAGE']['LINES']
     isd['TOTAL_SAMPLES'] = spice.gdpool('INS{}_PIXEL_SAMPLES'.format(ikid), 0, 1)
     isd['SENSOR_TYPE'] = 'USGSAstroLineScanner'
@@ -90,8 +90,8 @@ def get_isd(label):
     eph_rates = np.empty(eph.shape)
     current_et = et
     for i in range(n_ephemeris):
-        loc_direct, _ = spice.spkpos(target_name, current_et, 'IAU_MARS', 'LT+S', 'MRO')
-        state, _ = spice.spkezr(target_name, current_et, 'IAU_MARS', 'LT+S', 'MRO')
+        loc_direct, _ = spice.spkpos(target_name, current_et, 'IAU_MARS', 'NONE', 'MRO')
+        state, _ = spice.spkezr(target_name, current_et, 'IAU_MARS', 'NONE', 'MRO')
         eph[i] = loc_direct
         eph_rates[i] = state[3:]
         current_et += isd['DT_EPHEM'] # Increment the time by the number of lines being stepped
@@ -111,8 +111,8 @@ def get_isd(label):
         # Find the rotation matrix
         camera2bodyfixed = spice.pxform('MRO_CTX', 'IAU_MARS', current_et)
         q = spice.m2q(camera2bodyfixed)
-        qua[i][:3] = q[1:]
-        qua[i][-1] = q[0]
+        qua[i,:3] = q[1:]
+        qua[i,3] = q[0]
         current_et += isd['DT_QUAT']
     isd['QUATERNIONS'] = qua.flatten()
 
