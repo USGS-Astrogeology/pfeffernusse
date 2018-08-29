@@ -3,3 +3,4 @@ python-dateutil
 setuptools
 pvl
 spiceypy
+numpy
