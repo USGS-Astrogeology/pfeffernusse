@@ -40,8 +40,8 @@ def get_isd(label):
     isd['DETECTOR_SAMPLE_SUMMING'] = label['SAMPLING_FACTOR']
     isd['DETECTOR_SAMPLE_SUMMING'] = label['SAMPLING_FACTOR']
     isd['STARTING_SAMPLE'] = 0  # label['SAMPLE_FIRST_PIXEL']
-    isd['TOTAL_LINES'] = nlines =  label['IMAGE']['LINES']
-    isd['TOTAL_SAMPLES'] = spice.gdpool('INS{}_PIXEL_SAMPLES'.format(ikid), 0, 1)
+    isd['TOTAL_LINES'] = nlines = label['LINES']
+    isd['TOTAL_SAMPLES'] = label['LINE_SAMPLES']  # spice.gdpool('INS{}_PIXEL_SAMPLES'.format(ikid), 0, 1)
     isd['SENSOR_TYPE'] = 'USGSAstroLineScanner'
     isd['MOUNTING_ANGLES'] = np.zeros(3)
     isd['ISIS_Z_DIRECTION'] = 1
