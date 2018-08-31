@@ -4,6 +4,7 @@ import zlib
 import importlib
 import os
 from glob import glob
+import json
 
 from flask import current_app as app
 
@@ -15,7 +16,10 @@ available_drivers = [os.path.basename(d).split('_')[0] for d in __all__]
 
 
 def load(label):
-    label = pvl.loads(label)
+    try:
+        label = pvl.loads(label)
+    except:
+        label = json.loads(label)
     for driver in __drivers__:
         try:
             try:
