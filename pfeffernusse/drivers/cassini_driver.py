@@ -1,9 +1,12 @@
 from glob import glob
-import spiceypy as spice
-
 import os
 
-def get_isd(label, config):
+import spiceypy as spice
+from pfeffernusse import config
+
+
+def get_isd(label):
+
     mission_name = {
         "CASSINI-HUYGENS" : "CASSINI"
     }
@@ -13,7 +16,8 @@ def get_isd(label, config):
         "ISSWA" : "CASSINI_ISS_WAC"
     }
 
-    mks = sorted(glob(config.metakernals_dir+'/*.tm'))
+    metakernal_dir = config.cassini
+    mks = sorted(glob(metakernal_dir+'/*.tm'))
 
     instrument_name = instrument_names[label['INSTRUMENT_ID']]
     spacecraft_name = mission_name[label['MISSION_NAME']]
@@ -41,7 +45,8 @@ def get_isd(label, config):
     isd['semiminor'] = rad[1][1] * 1000
 
     # transx and transy are unavailable so fill in with pixel_size after conversion to millimeters from microns
-    pixel_size = int(spice.gipool('INS{}_PIXEL_SIZE'.format(instrument_id), 0, 1)[0])
+    # assuming pixels are square
+    pixel_size = int(spice.gipool('INS{}_PIXEL_SIZE'.format(instrument_id), 0, 1)[0]) * 0.001
     isd['focal2pixel_samples'] = [0.0, pixel_size, 0.0]
     isd['focal2pixel_lines'] = [0.0, 0.0, pixel_size]
 
@@ -49,8 +54,8 @@ def get_isd(label, config):
     isd['starting_detector_sample'] = 0.0
     isd['starting_detector_line'] = 0.0
 
-    isd['image_lines'] = int(spice.gipool('INS{}_PIXEL_LINES'.format(instrument_id), 0, 1)[0])
-    isd['image_samples'] = int(spice.gipool('INS{}_PIXEL_SAMPLES'.format(instrument_id), 0, 1)[0])
+    isd['image_lines'] = float(spice.gipool('INS{}_PIXEL_LINES'.format(instrument_id), 0, 1)[0])
+    isd['image_samples'] = float(spice.gipool('INS{}_PIXEL_SAMPLES'.format(instrument_id), 0, 1)[0])
 
     isd['focal_length_model'] = {}
     isd['focal_length_model']['focal_length'] = float(spice.gdpool('INS{}_FOCAL_LENGTH'.format(instrument_id), 0, 1)[0])
@@ -79,11 +84,11 @@ def get_isd(label, config):
     # Get the rotation angles from MDIS NAC frame to Mercury body-fixed frame
     camera2bodyfixed = spice.pxform(instrument_name, reference_frame, et)
     quat = spice.m2q(camera2bodyfixed)
-
+    # cassini follows spice style for quaternions so no transformation is needed
     isd['sensor_orientation'] = list(quat)
 
     # Get the Sensor Position
-    loc, _ = spice.spkpos(target_name, et, reference_frame, 'LT+S', spacecraft_name)
+    loc, _ = spice.spkpos(target_name, et, reference_frame, 'None', spacecraft_name)
     loc *= -1000
 
     isd['sensor_location'] = {}
@@ -128,4 +133,8 @@ def get_isd(label, config):
     isd['sun_velocity']['x'] = sun_state[3] * 1000
     isd['sun_velocity']['y'] = sun_state[4] * 1000
     isd['sun_velocity']['z'] = sun_state[5] * 1000
+    
+    # cassini has no optical distortion model
+    isd['optical_distortion'] = None
+
     return isd
