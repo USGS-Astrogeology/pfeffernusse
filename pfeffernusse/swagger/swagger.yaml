@@ -1,0 +1,382 @@
+---
+swagger: "2.0"
+info:
+  description: "A SpiceAPI for extracting NAIF Spice Data"
+  version: "0.1.2"
+  title: "Pfeffernusse"
+  contact:
+    email: "jlaura@usgs.gov"
+  license:
+    name: "UnLicense"
+    url: "http://unlicense.org/"
+host: "localhost:8080"
+basePath: "/v1"
+schemes:
+- "http"
+paths:
+  /pds/:
+    post:
+      summary: "Converts Image Labels to ISDs"
+      description: "Adds an item to the system"
+      operationId: "create_isd"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "label"
+        required: true
+        schema:
+          $ref: "#/definitions/request_ISD"
+      responses:
+        200:
+          description: "Successful Label Translation"
+          schema:
+            $ref: "#/definitions/ISD200"
+        400:
+          description: "invalid input, object invalid"
+      x-swagger-router-controller: "pfeffernusse.controllers.isd"
+definitions:
+  optical_distortion:
+    type: "object"
+    properties:
+      transverse:
+        $ref: "#/definitions/optical_distortion_transverse"
+      radial:
+        $ref: "#/definitions/optical_distortion_radial"
+    example:
+      radial:
+        coefficients:
+        - 3.61607674925191080461672754609026014804840087890625
+        - 3.61607674925191080461672754609026014804840087890625
+      transverse:
+        y:
+        - 9.301444243932575517419536481611430644989013671875
+        - 9.301444243932575517419536481611430644989013671875
+        x:
+        - 7.061401241503109105224211816675961017608642578125
+        - 7.061401241503109105224211816675961017608642578125
+  XYZ:
+    type: "object"
+    required:
+    - "x"
+    - "y"
+    - "z"
+    properties:
+      x:
+        type: "number"
+      y:
+        type: "number"
+      z:
+        type: "number"
+    title: "XYZ Position or Velocity"
+    description: "An object to hold the x,y,z position or velocity of an object in\
+      \ meters"
+    example:
+      z: 6.8468526983526398765889098285697400569915771484375
+      y: 1.489415909854170383397331534069962799549102783203125
+      x: 1.024645700144157789424070870154537260532379150390625
+  request_ISD:
+    type: "object"
+    properties:
+      label:
+        type: "string"
+        format: "uuid"
+  Quaternion:
+    title: "Quaternion"
+    type: "array"
+    description: "Each quaternion is of the general form: (scalar, vector component,\
+      \ vector component,vector component).The specific form used is that described\
+      \ in the NAIF Quaternions whitepaper under 'SPICE Quaternions' available at:\
+      \ ftp: //naif.jpl.nasa.gov/pub/naif/misc/Quaternion_White_Paper/Quaternions_White_Paper.pdf"
+    items:
+      type: "number"
+  ISD200:
+    type: "object"
+    required:
+    - "focal2pixel_lines"
+    - "focal2pixel_samples"
+    - "focal_length_model"
+    - "image_lines"
+    - "image_samples"
+    - "radii"
+    - "reference_height"
+    - "sensor_orientation"
+    - "starting_detector_line"
+    - "starting_detector_sample"
+    - "starting_ephemeris_time"
+    properties:
+      detector_center:
+        $ref: "#/definitions/ISD200_detector_center"
+      center_ephemeris_time:
+        type: "number"
+        description: "The center ephemeris time of the image"
+      starting_ephemeris_time:
+        type: "number"
+        description: "The starting ephemeris time of the image"
+      focal_length_model:
+        $ref: "#/definitions/ISD200_focal_length_model"
+      image_lines:
+        type: "number"
+        description: "The number of lines in the image"
+      image_samples:
+        type: "number"
+        description: "The the number of samples in the image"
+      radii:
+        $ref: "#/definitions/ISD200_radii"
+      optical_distortion:
+        $ref: "#/definitions/optical_distortion"
+      starting_detector_sample:
+        type: "number"
+        description: "The sample on the detector where the data starts"
+      starting_detector_line:
+        type: "number"
+        description: "The line on the detector where the data starts"
+      focal2pixel_samples:
+        type: "array"
+        description: "Transformation x coefficients from focal plane (mm) to detector\
+          \ pixel coordinates"
+        items:
+          type: "number"
+      focal2pixel_lines:
+        type: "array"
+        description: "Transformation y coefficients from focal plane (mm) to detector\
+          \ pixel coordinates"
+        items:
+          type: "number"
+      sensor_location:
+        type: "array"
+        description: "(X, Y, Z) location of sensor in body-fixed frame."
+        items:
+          $ref: "#/definitions/XYZ"
+      sensor_velocity:
+        type: "array"
+        description: "(v_x, v_y, v_z) velocity of sensor in body-fixed frame."
+        items:
+          $ref: "#/definitions/XYZ"
+      sun_position:
+        type: "array"
+        description: "(x, y,z) of the sun in body-fixed frame."
+        items:
+          $ref: "#/definitions/XYZ"
+      sun_velocity:
+        type: "array"
+        description: "(v_x, v_y, v_z) velocity of sun in body-fixed frame."
+        items:
+          $ref: "#/definitions/XYZ"
+      sensor_orientation:
+        type: "array"
+        description: "Orientation of the sensor provided in quaternions"
+        items:
+          $ref: "#/definitions/Quaternion"
+      line_scan_rate:
+        type: "array"
+        description: "The line rates of the detector map with the associated start\
+          \ line and time"
+        items:
+          type: "array"
+          items:
+            type: "number"
+            description: "The (start_line, line_start_time, exposure_time). The exposure\
+              \ time is in seconds and any non - provided values will be set to -\
+              \ 1."
+      detector_sample_summing:
+        type: "number"
+        description: "The summing in the sample-direction. A summing of 1 indicates\
+          \ no summing, summing of 2 indicates 2 pixel summing,4 indicates 4 pixel\
+          \ summing, etc "
+      detector_line_summing:
+        type: "number"
+        description: "The summing in the line-direction"
+      apply_light_time_correction:
+        type: "boolean"
+        description: "A flag to indcate whether the light-time correction should be\
+          \ applied"
+      number_of_ephemerides:
+        type: "number"
+        description: "The number of emphemeris points"
+      number_of_quaternions:
+        type: "number"
+        description: "The number of quaternions"
+      dt_ephemeris:
+        type: "number"
+        description: "The time between each ephemeris point."
+      t0_ephemeris:
+        type: "number"
+        description: "First ephemeris time - center image time"
+      dt_quaternion:
+        type: "number"
+        description: "Time spacing of quaternions."
+      t0_quaternion:
+        type: "number"
+        description: "First quaternion time - center image time."
+      reference_height:
+        $ref: "#/definitions/ISD200_reference_height"
+      interpolation_method:
+        type: "string"
+        description: "The type of interpolation method to use."
+        enum:
+        - "lagrange"
+    title: "Instrument Specification Definition"
+    description: "The Instrument Specification Definition for Astro CSM"
+    example:
+      sensor_velocity:
+      - z: 6.8468526983526398765889098285697400569915771484375
+        y: 1.489415909854170383397331534069962799549102783203125
+        x: 1.024645700144157789424070870154537260532379150390625
+      - z: 6.8468526983526398765889098285697400569915771484375
+        y: 1.489415909854170383397331534069962799549102783203125
+        x: 1.024645700144157789424070870154537260532379150390625
+      focal2pixel_lines:
+      - 1.231513536777255612975068288506008684635162353515625
+      - 1.231513536777255612975068288506008684635162353515625
+      optical_distortion:
+        radial:
+          coefficients:
+          - 3.61607674925191080461672754609026014804840087890625
+          - 3.61607674925191080461672754609026014804840087890625
+        transverse:
+          y:
+          - 9.301444243932575517419536481611430644989013671875
+          - 9.301444243932575517419536481611430644989013671875
+          x:
+          - 7.061401241503109105224211816675961017608642578125
+          - 7.061401241503109105224211816675961017608642578125
+      dt_quaternion: 8.7620420127490010742121739895083010196685791015625
+      focal_length_model:
+        focal_epsilon: 5.962133916683182377482808078639209270477294921875
+        focal_length: 1.46581298050294517310021547018550336360931396484375
+        key: "key"
+      image_samples: 2.3021358869347654518833223846741020679473876953125
+      number_of_quaternions: 9.965781217890562260208753286860883235931396484375
+      detector_center: "{\"line\":100,\"sample\":100.5}"
+      number_of_ephemerides: 5.02500479152029466689555192715488374233245849609375
+      image_lines: 5.63737665663332876420099637471139430999755859375
+      starting_detector_sample: 2.027123023002321833274663731572218239307403564453125
+      sensor_orientation:
+      - ""
+      - ""
+      sun_velocity:
+      - z: 6.8468526983526398765889098285697400569915771484375
+        y: 1.489415909854170383397331534069962799549102783203125
+        x: 1.024645700144157789424070870154537260532379150390625
+      - z: 6.8468526983526398765889098285697400569915771484375
+        y: 1.489415909854170383397331534069962799549102783203125
+        x: 1.024645700144157789424070870154537260532379150390625
+      detector_line_summing: 4.9652184929849543237878606305457651615142822265625
+      apply_light_time_correction: true
+      t0_quaternion: 9.0183481860707832566959041287191212177276611328125
+      detector_sample_summing: 1.173074250955943309548956676735542714595794677734375
+      reference_height: "{\"minheight\":100,\"maxheight\":1000}"
+      center_ephemeris_time: 0.80082819046101150206595775671303272247314453125
+      sensor_location:
+      - z: 6.8468526983526398765889098285697400569915771484375
+        y: 1.489415909854170383397331534069962799549102783203125
+        x: 1.024645700144157789424070870154537260532379150390625
+      - z: 6.8468526983526398765889098285697400569915771484375
+        y: 1.489415909854170383397331534069962799549102783203125
+        x: 1.024645700144157789424070870154537260532379150390625
+      sun_position:
+      - z: 6.8468526983526398765889098285697400569915771484375
+        y: 1.489415909854170383397331534069962799549102783203125
+        x: 1.024645700144157789424070870154537260532379150390625
+      - z: 6.8468526983526398765889098285697400569915771484375
+        y: 1.489415909854170383397331534069962799549102783203125
+        x: 1.024645700144157789424070870154537260532379150390625
+      line_scan_rate:
+      - - 7.4577447736837658709418974467553198337554931640625
+        - 7.4577447736837658709418974467553198337554931640625
+      - - 7.4577447736837658709418974467553198337554931640625
+        - 7.4577447736837658709418974467553198337554931640625
+      focal2pixel_samples:
+      - 7.3862819483858839220147274318151175975799560546875
+      - 7.3862819483858839220147274318151175975799560546875
+      t0_ephemeris: 6.683562403749608193948006373830139636993408203125
+      dt_ephemeris: 9.3693102714106686335071572102606296539306640625
+      interpolation_method: "lagrange"
+      starting_detector_line: 4.1456080298839363962315474054776132106781005859375
+      radii: "{\"semimajor\":339600.2,\"semiminor\":337600.2,\"units\":\"meters\"}"
+      starting_ephemeris_time: 6.02745618307040320615897144307382404804229736328125
+  optical_distortion_transverse:
+    properties:
+      x:
+        type: "array"
+        items:
+          type: "number"
+      y:
+        type: "array"
+        items:
+          type: "number"
+    example:
+      y:
+      - 9.301444243932575517419536481611430644989013671875
+      - 9.301444243932575517419536481611430644989013671875
+      x:
+      - 7.061401241503109105224211816675961017608642578125
+      - 7.061401241503109105224211816675961017608642578125
+  optical_distortion_radial:
+    properties:
+      coefficients:
+        type: "array"
+        items:
+          type: "number"
+          description: "Each coefficient used for the distortion equation in order\
+            \ of increasing degrees."
+    example:
+      coefficients:
+      - 3.61607674925191080461672754609026014804840087890625
+      - 3.61607674925191080461672754609026014804840087890625
+  ISD200_detector_center:
+    required:
+    - "line"
+    - "sample"
+    properties:
+      line:
+        type: "number"
+      sample:
+        type: "number"
+    description: "Center of the detector in pixel coordinates (line, sample)"
+    example: "{\"line\":100,\"sample\":100.5}"
+  ISD200_focal_length_model:
+    required:
+    - "focal_length"
+    properties:
+      key:
+        type: "string"
+        description: "A key to get information about time/temp dependent focal length\
+          \ models"
+      focal_length:
+        type: "number"
+        description: "The focal length in mm"
+      focal_epsilon:
+        type: "number"
+        description: "The uncertainty of the focal length in mm"
+    description: "The static focal length or the information needed to model a variable\
+      \ focal length"
+    example:
+      focal_epsilon: 5.962133916683182377482808078639209270477294921875
+      focal_length: 1.46581298050294517310021547018550336360931396484375
+      key: "key"
+  ISD200_radii:
+    required:
+    - "semimajor"
+    properties:
+      semimajor:
+        type: "number"
+      semiminor:
+        type: "number"
+      units:
+        type: "string"
+    description: "The radii of the target in meters."
+    example: "{\"semimajor\":339600.2,\"semiminor\":337600.2,\"units\":\"meters\"}"
+  ISD200_reference_height:
+    required:
+    - "maxheight"
+    - "minheight"
+    properties:
+      minheight:
+        type: "number"
+      maxheight:
+        type: "number"
+    description: "Used for determining the intersection of the look vector with the\
+      \ ellipsoid, measured in meters"
+    example: "{\"minheight\":100,\"maxheight\":1000}"
