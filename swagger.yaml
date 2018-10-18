@@ -3,10 +3,9 @@ host: 'localhost:8080'
 basePath: '/v1'
 schemes:
   - http
-  - https
 info:
   description: A SpiceAPI for extracting NAIF Spice Data
-  version: "0.1.2"
+  version: "0.1.1"
   title: Pfeffernusse
   contact:
     email: jlaura@usgs.gov
@@ -15,10 +14,10 @@ info:
     url: 'http://unlicense.org/'
 paths:
   /pds/:
-    post:
+    get:
       summary: Converts Image Labels to ISDs
       operationId: create_isd
-      x-swagger-router-controller: app.controllers.isd
+      x-swagger-router-controller: pfeffernusse.controllers.isd
       description: Adds an item to the system
       produces:
         - application/json
@@ -35,7 +34,49 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/request_ISD'
+  /metalkernels/:
+    get:
+      summary: "Get a specific kernel"
+      operationId: "get_metakernel"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "mission"
+        in: "query"
+        required: true
+        type: "string"
+      - name: "year"
+        in: "query"
+        required: true
+        type: "string"
+      - name: "version"
+        in: "query"
+        required: true
+        type: "string"
+        default: "latest"
+      responses:
+        200:
+          description: "Successful Kernel Search"
+          schema:
+            $ref: "#/definitions/data"
+        400:
+          description: "invalid input, object invalid"
+      x-swagger-router-controller: "pfeffernusse.controllers.metakernels"
 
+  /metakernels/catalog/:
+    get:
+      summary: "Access Product Information"
+      description: "Get Available Products and Related Metadata"
+      operationId: "metakernel_catalog"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "Successful Catalog Search"
+          schema:
+            $ref: "#/definitions/data"
+        400:
+          description: "invalid input, object invalid"
 
 definitions:
   optical_distortion:
@@ -282,3 +323,14 @@ definitions:
       - image_lines
       - starting_detector_sample
       - starting_detector_line
+
+  data:
+    type: object
+    description: "Generic data object"
+    properties:
+      count:
+        type: integer
+      data:
+        type: array
+        items:
+          type: object

@@ -2,7 +2,7 @@
 swagger: "2.0"
 info:
   description: "A SpiceAPI for extracting NAIF Spice Data"
-  version: "0.1.2"
+  version: "0.1.1"
   title: "Pfeffernusse"
   contact:
     email: "jlaura@usgs.gov"
@@ -15,7 +15,7 @@ schemes:
 - "http"
 paths:
   /pds/:
-    post:
+    get:
       summary: "Converts Image Labels to ISDs"
       description: "Adds an item to the system"
       operationId: "create_isd"
@@ -34,7 +34,51 @@ paths:
             $ref: "#/definitions/ISD200"
         400:
           description: "invalid input, object invalid"
-      x-swagger-router-controller: "pfeffernusse.controllers.isd"
+      x-swagger-router-controller: "pfeffernusse.controllers.default_controller"
+  /metalkernels/:
+    get:
+      summary: "Get a specific kernel"
+      operationId: "get_metakernel"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "mission"
+        in: "query"
+        required: true
+        type: "string"
+      - name: "year"
+        in: "query"
+        required: true
+        type: "string"
+      - name: "version"
+        in: "query"
+        required: true
+        type: "string"
+        default: "latest"
+      responses:
+        200:
+          description: "Successful Kernel Search"
+          schema:
+            $ref: "#/definitions/data"
+        400:
+          description: "invalid input, object invalid"
+      x-swagger-router-controller: "pfeffernusse.controllers.default_controller"
+  /metakernels/catalog/:
+    get:
+      summary: "Access Product Information"
+      description: "Get Available Products and Related Metadata"
+      operationId: "metakernel_catalog"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Catalog Search"
+          schema:
+            $ref: "#/definitions/data"
+        400:
+          description: "invalid input, object invalid"
+      x-swagger-router-controller: "pfeffernusse.controllers.default_controller"
 definitions:
   optical_distortion:
     type: "object"
@@ -296,6 +340,22 @@ definitions:
       starting_detector_line: 4.1456080298839363962315474054776132106781005859375
       radii: "{\"semimajor\":339600.2,\"semiminor\":337600.2,\"units\":\"meters\"}"
       starting_ephemeris_time: 6.02745618307040320615897144307382404804229736328125
+  data:
+    type: "object"
+    properties:
+      count:
+        type: "integer"
+      data:
+        type: "array"
+        items:
+          type: "object"
+          properties: {}
+    description: "Generic data object"
+    example:
+      count: 0
+      data:
+      - "{}"
+      - "{}"
   optical_distortion_transverse:
     properties:
       x:
