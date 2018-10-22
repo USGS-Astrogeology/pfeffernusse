@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import pprint
 
 from dateutil import parser
 import spiceypy as spice
@@ -37,6 +38,9 @@ class Base(ABC):
         kernels can be unloaded.
         """
         spice.unload(self.metakernel)
+    
+    def to_dict(self):
+        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
 
     @property
     @abstractmethod
@@ -47,9 +51,6 @@ class Base(ABC):
     @abstractmethod
     def instrument_id(self):
         pass
-
-    def as_dict(self):
-        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
 
     @property
     def start_time(self):
@@ -174,7 +175,7 @@ class Base(ABC):
                                      'NONE',
                                      self.label['TARGET_NAME'])
 
-        return sun_state[4:7]
+        return sun_state[3:6]
     
     @property
     def sensor_velocity(self):

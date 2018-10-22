@@ -10,7 +10,8 @@ from pfeffernusse import config
 from pfeffernusse.drivers.base import Base
 from pfeffernusse.drivers.distortion import TransverseDistortion
 
-from pfeffernusse.models.isd200 import ISD200
+from pfeffernusse.drivers.pfeffernusse_response import to_pfeffer_response
+
 
 class Messenger(Base, TransverseDistortion):
 
@@ -61,5 +62,6 @@ def get_isd(label):
           in fact an MDIS label.
 
     """
-    m = Messenger(label)    
-    return ISD200.from_dict(m.as_dict())
+    with Messenger(label) as m:
+        isd = to_pfeffer_response(m.to_dict())
+    return isd

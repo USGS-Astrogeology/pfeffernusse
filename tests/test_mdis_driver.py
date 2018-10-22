@@ -11,7 +11,7 @@ class SimpleSpice():
     def scs2e(self, x, y):
         return y
     def bods2c(self, x):
-        return x
+        return -12345
     def gdpool(self, key, x, length):
         return np.ones(length).tolist()
     def bodvrd(self, key, x, length):
@@ -48,7 +48,7 @@ def mdislabel():
 
 def test_mdis_creation(mdislabel):
     with Messenger(mdislabel) as m:
-        d = m.as_dict()
+        d = m.to_dict()
 
         keys = ["model_name", "center_ephemeris_time", "dt_ephemeris", "focal2pixel_lines", "focal2pixel_samples",
                 "focal_length", "focal_length_epsilon", "image_lines", "image_samples", "interpolation_method", "number_of_ephemerides",
