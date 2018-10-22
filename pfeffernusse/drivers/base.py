@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
 
+from dateutil import parser
 import spiceypy as spice
 
+
+## This should be returning a dict without any coupling to swagger. The dict though, 
+## should be parsable to a swagger object.
 
 class Base(ABC):
     """
@@ -11,23 +15,60 @@ class Base(ABC):
 
     Methods that must be provided:
     - instrument_id
-    - 
+    - metakernel
 
     """
     def __init__(self, label, *args, **kwargs):
         self.label = label
-    
-    def as_dict(self):
-        properties = {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
-        return properties
 
+    def __enter__(self):
+        """
+        Called when the context is created. This is used
+        to get the kernels furnished.
+        """
+        if self.metakernel:
+            spice.furnsh(self.metakernel)
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Called when the context goes out of scope. Once
+        this is done, the object is out of scope and the
+        kernels can be unloaded.
+        """
+        spice.unload(self.metakernel)
+
+    @property
+    @abstractmethod
+    def metakernel(self):
+        pass
+
+    @property
+    @abstractmethod
+    def instrument_id(self):
+        pass
+
+    def as_dict(self):
+        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
+
+    @property
+    def start_time(self):
+        return parser.parse(self.label['START_TIME'])
 
     @property 
-    def lines(self):
+    def image_lines(self):
         return self.label['LINES']
 
+    @property
+    def interpolation_method(self):
+        return 'lagrange'
+
+    @property
+    def number_of_ephemerides(self):
+        return 1
+
     @property 
-    def samples(self):
+    def image_samples(self):
         return self.label['SAMPLES']
     
     @property
@@ -35,47 +76,39 @@ class Base(ABC):
         return self.label['TARGET_NAME']
     
     @property
-    def et(self):
-        sclock = self.label['SPACECRAFT_CLOCK_START_COUNT']
-        exposure_duration = self.label['EXPOSURE_DURATION'].value
-        exposure_duration = exposure_duration * 0.001  # Scale to seconds
-
-        # Get the instrument id, and, since this is a framer, set the time to the middle of the exposure
-        start_et = spice.scs2e(self.spacecraft_id, sclock)
-        start_et += (exposure_duration / 2.0)
-        end_et = spice.scs2e(self.spacecraft_id, self.label['SPACECRAFT_CLOCK_STOP_COUNT']) + (exposure_duration / 2.0)
-        et = (start_et + end_et)/2
-        return et
+    def starting_ephemeris_time(self):
+        if not hasattr(self, '_starting_ephemeris_time'):
+            sclock = self.label['SPACECRAFT_CLOCK_START_COUNT']
+            self._starting_ephemeris_time = spice.scs2e(self.spacecraft_id, sclock)
+        return self._starting_ephemeris_time
     
     @property
-    def del_et(self):
-        sclock = self.label['SPACECRAFT_CLOCK_START_COUNT']
-        exposure_duration = self.label['EXPOSURE_DURATION'].value
-        exposure_duration = exposure_duration * 0.001  # Scale to seconds
-
-        # Get the instrument id, and, since this is a framer, set the time to the middle of the exposure
-        start_et = spice.scs2e(self.spacecraft_id, sclock)
-        start_et += (exposure_duration / 2.0)
-        end_et = spice.scs2e(self.spacecraft_id, self.label['SPACECRAFT_CLOCK_STOP_COUNT']) + (exposure_duration / 2.0)
-        return end_et - start_et
+    def ending_ephemeris_time(self):
+        if not hasattr(self, '_ending_ephemeris_time'):
+            exposure_duration = self.label['EXPOSURE_DURATION'].value
+            exposure_duration = exposure_duration * 0.001  # Scale to seconds
+            self._ending_ephemeris_time = spice.scs2e(self.spacecraft_id, self.label['SPACECRAFT_CLOCK_STOP_COUNT']) + (exposure_duration / 2.0)
+        return self._ending_ephemeris_time
 
     @property
-    def start_et(self):
-        sclock = self.label['SPACECRAFT_CLOCK_START_COUNT']
-        exposure_duration = self.label['EXPOSURE_DURATION'].value
-        exposure_duration = exposure_duration * 0.001  # Scale to seconds
+    def center_ephemeris_time(self):
+        if not hasattr(self, '_et'):
+            self._et = (self.starting_ephemeris_time + self.ending_ephemeris_time)/2
+        return self._et
 
-        # Get the instrument id, and, since this is a framer, set the time to the middle of the exposure
-        return spice.scs2e(self.spacecraft_id, sclock)
+    @property
+    def dt_ephemeris(self):
+        if not hasattr(self, '_dt_ephemeris'):
+            self._dt_ephemeris = self.ending_ephemeris_time - self.starting_ephemeris_time 
+        return self._dt_ephemeris
+
+    @property
+    def detector_center(self):
+        return list(spice.gdpool('INS{}_CCD_CENTER'.format(self.ikid), 0, 2))
  
     @property
     def spacecraft_name(self):
         return self.label['MISSION_NAME']
-    
-    @property
-    @abstractmethod
-    def instrument_id(self):
-        pass
     
     @property
     def ikid(self):
@@ -90,8 +123,8 @@ class Base(ABC):
         return list(spice.gdpool('INS{}_TRANSX'.format(self.ikid), 0, 3))
     
     @property 
-    def focal2pixels_samples(self):
-        list(spice.gdpool('INS{}_TRANSX'.format(self.ikid), 0, 3))
+    def focal2pixel_samples(self):
+        return list(spice.gdpool('INS{}_TRANSX'.format(self.ikid), 0, 3))
         
     @property 
     def focal_length(self):
@@ -108,7 +141,7 @@ class Base(ABC):
     @property
     def starting_detector_sample(self):
         return 0
-    
+
     @property 
     def semimajor(self):
         rad = spice.bodvrd(self.label['TARGET_NAME'], 'RADII', 3)
@@ -126,7 +159,7 @@ class Base(ABC):
     @property
     def sun_position(self):
         sun_state, _ = spice.spkezr("SUN",
-                                     self.et,
+                                     self.center_ephemeris_time,
                                      self.reference_frame,
                                      'NONE',
                                      self.label['TARGET_NAME'])
@@ -136,7 +169,7 @@ class Base(ABC):
     @property
     def sun_velocity(self):
         sun_state, lt = spice.spkezr("SUN",
-                                     self.et,
+                                     self.center_ephemeris_time,
                                      self.reference_frame,
                                      'NONE',
                                      self.label['TARGET_NAME'])
@@ -146,7 +179,7 @@ class Base(ABC):
     @property
     def sensor_velocity(self):
         vstate, _ = spice.spkezr(self.target_name,
-                                           self.et,
+                                           self.center_ephemeris_time,
                                            self.reference_frame,
                                            'None',
                                            self.label['TARGET_NAME'])
@@ -155,8 +188,12 @@ class Base(ABC):
     @property
     def sensor_position(self):
         loc, _ = spice.spkpos(self.target_name, 
-                              self.et, 
+                              self.center_ephemeris_time, 
                               self.reference_frame, 
                               'None', 
                               self.spacecraft_name)
         return loc[:4]
+
+    @property
+    def sensor_orientation(self):
+        return [1,2,3,4]

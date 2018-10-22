@@ -1,6 +1,7 @@
 from glob import glob
 import os
 
+from dateutil import parser
 import pvl
 import spiceypy as spice
 import numpy as np
@@ -9,8 +10,19 @@ from pfeffernusse import config
 from pfeffernusse.drivers.base import Base
 from pfeffernusse.drivers.distortion import TransverseDistortion
 
+from pfeffernusse.models.isd200 import ISD200
 
 class Messenger(Base, TransverseDistortion):
+
+    @property
+    def metakernel(self):
+        metakernel_dir = config.mdis
+        mks = sorted(glob(os.path.join(metakernel_dir,'*.tm')))
+        if not hasattr(self, '_metakernel'):
+            for mk in mks:
+                if str(self.start_time.year) in os.path.basename(mk):
+                    self._metakernel = mk
+        return self._metakernel
 
     @property
     def instrument_id(self):
@@ -20,7 +32,7 @@ class Messenger(Base, TransverseDistortion):
             'MERCURY DUAL IMAGING SYSTEM WIDE ANGLE CAMERA':'MSGR_MDIS_WAC'
         }
         return id_lookup[self.label['INSTRUMENT_ID']]
-        
+
     @property
     def focal_length(self):
         """
@@ -34,6 +46,14 @@ class Messenger(Base, TransverseDistortion):
         # eval at the focal_plane_tempature
         return f_t(self.label['FOCAL_PLANE_TEMPERATURE'].value)
 
+    @property
+    def model_name(self):
+        return "USGS_ASTRO_FRAME_SENSOR_MODEL"
+
+    @property
+    def reference_height(self):
+        # TODO: This should be a reasonable #
+        return 0
 
 def get_isd(label):
     """
@@ -41,14 +61,5 @@ def get_isd(label):
           in fact an MDIS label.
 
     """
-    metakernel_dir = config.mdis
-    mks = sorted(glob(os.path.join(metakernel_dir,'*.tm')))
-
-    messenger_mk = None
-    for mk in mks:
-        if str(time.year) in os.path.basename(mk):
-            messenger_mk = mk
-
-    spice.furnsh(messenger_mk)
-
-    return isd
+    m = Messenger(label)    
+    return ISD200.from_dict(m.as_dict())
