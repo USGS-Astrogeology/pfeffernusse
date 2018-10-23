@@ -21,5 +21,5 @@ class RadialDistortion(ABC):
     Exposes the properties that are used to describe a radial distortion model.
     """
     @property
-    def odtr(self):
+    def odtk(self):
         return spice.gdpool('INS{}_OD_K'.format(self.ikid),0, 3)
