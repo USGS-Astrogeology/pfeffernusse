@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
-import pprint
 
 from dateutil import parser
 import spiceypy as spice
 
+from pfeffernusse.models.isd200 import ISD200
 
-## This should be returning a dict without any coupling to swagger. The dict though, 
-## should be parsable to a swagger object.
 
 class Base(ABC):
     """
@@ -41,7 +39,7 @@ class Base(ABC):
     
     def to_dict(self):
         return {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
-
+    
     @property
     @abstractmethod
     def metakernel(self):
@@ -143,6 +141,14 @@ class Base(ABC):
     def starting_detector_sample(self):
         return 0
 
+    @property
+    def detector_sample_summing(self):
+        return 0
+
+    @property
+    def detector_line_summing(self):
+        return self.label['SAMPLING_FACTOR']
+
     @property 
     def semimajor(self):
         rad = spice.bodvrd(self.label['TARGET_NAME'], 'RADII', 3)
@@ -176,7 +182,35 @@ class Base(ABC):
                                      self.label['TARGET_NAME'])
 
         return sun_state[3:6]
-    
+
+class LineScanner(Base):
+    def to_pfeffer_response(self):
+        """
+        Parse the data into a valid pfeffernusse response
+        """
+        data = self.to_dict()
+
+        # Take the flat reponse and create the pfeffernusse obj dicts
+        data['detector_center'] = {'line': data['detector_center'][0],
+                                'sample': data['detector_center'][1]}
+
+        data['sun_velocity'] = [{'x': data['sun_velocity'][0],
+                                'y': data['sun_velocity'][1],
+                                'z': data['sun_velocity'][2]}]
+
+        data['sensor_velocity'] = [{'x' : data['sensor_velocity'][0],
+                                   'y' : data['sensor_velocity'][1],
+                                   'z' : data['sensor_velocity'][2]}]
+
+        data['sun_position'] = [{'x' : data['sun_position'][0],
+                                'y' : data['sun_position'][1],
+                                'z' : data['sun_position'][2]}]
+
+        data['reference_height'] = {'minheight': data['reference_height'][0],
+                                    'maxheight': data['reference_height'][1]}
+
+        return ISD200.from_dict(data)
+
     @property
     def sensor_velocity(self):
         vstate, _ = spice.spkezr(self.target_name,
@@ -197,4 +231,71 @@ class Base(ABC):
 
     @property
     def sensor_orientation(self):
-        return [1,2,3,4]
+        camera2bodyfixed = spice.pxform(self.instrument_id,
+                                        self.target_name,
+                                        self.center_ephemeris_time)
+        q = spice.m2q(camera2bodyfixed)
+        # Reorder the quaternion
+        return [q[1], q[2], q[3], q[0]]
+
+    @property
+    def line_scan_rate(self):
+        """
+        A constant duration scan rate.
+        """
+        return self.label['LINE_EXPOSURE_DURATION'][0] * 0.001
+
+class Framer(Base):
+    def to_pfeffer_response(self):
+        """
+        Parse the data into a valid pfeffernusse response
+        """
+        data = self.to_dict()
+
+        # Take the flat reponse and create the pfeffernusse obj dicts
+        data['detector_center'] = {'line': data['detector_center'][0],
+                                'sample': data['detector_center'][1]}
+
+        data['sun_velocity'] = [{'x': data['sun_velocity'][0],
+                                'y': data['sun_velocity'][1],
+                                'z': data['sun_velocity'][2]}]
+
+        data['sensor_velocity'] = [{'x' : data['sensor_velocity'][0],
+                                   'y' : data['sensor_velocity'][1],
+                                   'z' : data['sensor_velocity'][2]}]
+
+        data['sun_position'] = [{'x' : data['sun_position'][0],
+                                'y' : data['sun_position'][1],
+                                'z' : data['sun_position'][2]}]
+
+        data['reference_height'] = {'minheight': data['reference_height'][0],
+                                    'maxheight': data['reference_height'][1]}
+
+        return ISD200.from_dict(data)
+
+    @property
+    def sensor_velocity(self):
+        vstate, _ = spice.spkezr(self.target_name,
+                                           self.center_ephemeris_time,
+                                           self.reference_frame,
+                                           'None',
+                                           self.label['TARGET_NAME'])
+        return vstate[3:6]
+    
+    @property
+    def sensor_position(self):
+        loc, _ = spice.spkpos(self.target_name, 
+                              self.center_ephemeris_time, 
+                              self.reference_frame, 
+                              'None', 
+                              self.spacecraft_name)
+        return loc[:4]
+
+    @property
+    def sensor_orientation(self):
+        camera2bodyfixed = spice.pxform(self.instrument_id,
+                                        self.target_name,
+                                        self.center_ephemeris_time)
+        q = spice.m2q(camera2bodyfixed)
+        # Reorder the quaternion
+        return [q[1], q[2], q[3], q[0]]

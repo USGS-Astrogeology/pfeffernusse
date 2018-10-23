@@ -1,31 +1,16 @@
 from collections import namedtuple
 from unittest import mock
 
-import numpy as np
 import pytest
 
 from pfeffernusse.drivers import mdis_driver, base, distortion
-from pfeffernusse.drivers.mdis_driver import Messenger, get_isd
+from pfeffernusse.drivers.mdis_driver import Messenger
+from pfeffernusse.models.isd200 import ISD200
 
-class SimpleSpice():
-    def scs2e(self, x, y):
-        return y
-    def bods2c(self, x):
-        return -12345
-    def gdpool(self, key, x, length):
-        return np.ones(length).tolist()
-    def bodvrd(self, key, x, length):
-        return (3, np.ones(length,).tolist())
-    def spkpos(self, *args):
-        return (np.ones(3).tolist(), None)
-    def spkezr(self, *args):
-        return (np.ones(6).tolist(), None)
-    def furnsh(self, *args):
-        return
-    def unload(self, *args):
-        return
 
 # 'Mock' the spice module where it is imported
+from conftest import SimpleSpice
+
 simplespice = SimpleSpice()
 base.spice = simplespice
 mdis_driver.spice = simplespice
@@ -59,7 +44,10 @@ def test_mdis_creation(mdislabel):
             assert k in d.keys()  
 
 def test_mdis_as_pfeffer_isd(mdislabel):
-    isd = get_isd(mdislabel)
+    with Messenger(mdislabel) as m:
+        isd = m.to_pfeffer_response()
+    # TODO: Need better tests here
+    assert isinstance(isd, ISD200)
 
 keys = ["model_name", "center_ephemeris_time", "dt_ephemeris", "focal2pixel_lines", "focal2pixel_samples",
     "focal_length_model", "image_lines", "image_samples", "interpolation_method", "number_of_ephemerides",

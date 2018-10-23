@@ -7,13 +7,11 @@ import spiceypy as spice
 import numpy as np
 
 from pfeffernusse import config
-from pfeffernusse.drivers.base import Base
+from pfeffernusse.drivers.base import Framer
 from pfeffernusse.drivers.distortion import TransverseDistortion
 
-from pfeffernusse.drivers.pfeffernusse_response import to_pfeffer_response
 
-
-class Messenger(Base, TransverseDistortion):
+class Messenger(Framer, TransverseDistortion):
 
     @property
     def metakernel(self):
@@ -54,14 +52,4 @@ class Messenger(Base, TransverseDistortion):
     @property
     def reference_height(self):
         # TODO: This should be a reasonable #
-        return 0
-
-def get_isd(label):
-    """
-    TODO: This function (and all like it) needs to open with some robust method to make sure this is
-          in fact an MDIS label.
-
-    """
-    with Messenger(label) as m:
-        isd = to_pfeffer_response(m.to_dict())
-    return isd
+        return 0, 100

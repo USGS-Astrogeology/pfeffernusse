@@ -6,19 +6,47 @@ import pvl
 import spiceypy as spice
 from pfeffernusse import config
 
+from pfeffernusse.drivers.base import LineScanner
+from pfeffernusse.drivers.distortion import RadialDistortion
+
+class MRO_CTX(LineScanner, RadialDistortion):
+    @property
+    def metakernel(self):
+        metakernel_dir = config.mro
+        mks = sorted(glob(os.path.join(metakernel_dir,'*.tm')))
+        if not hasattr(self, '_metakernel'):
+            for mk in mks:
+                if str(self.start_time.year) in os.path.basename(mk):
+                    self._metakernel = mk
+        return self._metakernel
+
+    @property
+    def instrument_id(self):
+        id_lookup = {
+            'CONTEXT CAMERA':'MRO_CTX'
+        }
+        return id_lookup[self.label['INSTRUMENT_ID']]
+    
+    @property
+    def spacecraft_name(self):
+        name_lookup = {
+            'MARS_RECONNAISSANCE_ORBITER': 'MRO'
+        }
+        return name_lookup[self.label['MISSION_NAME']]
+
+    @property
+    def model_name(self):
+        return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
+
+    @property
+    def reference_height(self):
+        # TODO: This should be a reasonable #
+        return 0, 100
+
+
+
 def get_isd(label):
 
-    metakernel_dir = config.mro
-    mks = sorted(glob(os.path.join(config.mro,'*.tm')))
-    time = label['START_TIME']
-
-    mro_mk = None
-    for mk in mks:
-        if str(time.year) in os.path.basename(mk):
-            mro_mk = mk
-    spice.furnsh(mro_mk)
-
-    isd = {}
 
     instrument_name = label['INSTRUMENT_NAME']
     spacecraft_name = label['SPACECRAFT_NAME']
