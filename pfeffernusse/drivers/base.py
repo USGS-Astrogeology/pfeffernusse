@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 
 from dateutil import parser
+import numpy as np
 import spiceypy as spice
 
+from pfeffernusse.drivers import distortion
 from pfeffernusse.models.isd200 import ISD200
 
 
@@ -38,8 +40,69 @@ class Base(ABC):
         spice.unload(self.metakernel)
     
     def to_dict(self):
-        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
+        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__') or p.startswith('_')}
+
+    def to_pfeffer_response(self):
+        """
+        Parse the data into a valid pfeffernusse response
+        """
+        data = self.to_dict()
+
+        # Take the flat reponse and create the pfeffernusse obj dicts
+        data['detector_center'] = {'line': data['detector_center'][0],
+                                'sample': data['detector_center'][1]}
+
+        # Parse the distortion object out of the 
+        if isinstance(self, distortion.RadialDistortion):
+            distortion_object = {'radial':{'coefficients':data['odtk']}}
+        elif isinstance(self, distortion.TransverseDistortion):
+            distortion_object = {'transverse':{'x':data['odtx'],
+                                               'y':data['odty']}}
+        data['optical_distortion'] = distortion_object
+
+        data['reference_height'] = {'minheight': data['reference_height'][0],
+                                    'maxheight': data['reference_height'][1],
+                                    'unit': 'm'}
+
+        data['sensor_position'] = {'unit':'m',
+                                   'locations':[data['sensor_position']]}
+
+        data['sensor_orientation'] = {'quaternions':[data['sensor_orientation']]}
+        
+        data['sensor_velocity'] = {'unit':'m',
+                                   'velocities': [data['sensor_velocity']]}
+        
+        data['radii'] = {'semimajor':data['semimajor'],
+                         'semiminor':data['semiminor'],
+                         'unit': 'm'}
+
+        return ISD200.from_dict(data)
     
+    def _compute_ephemerides(self):
+        """
+        Helper function to pull position and velocity in one pass
+        so that the results can then be cached in the associated 
+        properties.
+        """
+        eph = np.empty((self.number_of_ephemerides, 3))
+        eph_rates = np.empty(eph.shape)
+        current_et = self.starting_ephemeris_time
+        for i in range(self.number_of_ephemerides):
+            state, _ = spice.spkezr(self.target_name,
+                                    current_et,
+                                    self.target_name, 
+                                    'NONE', 
+                                    self.spacecraft_id) # Should this be ikid?
+            eph[i] = state[:3]
+            eph_rates[i] = state[3:]
+            # Increment the time by the number of lines being stepped
+            current_et += getattr(self, 'dt_ephemeris', 0)
+        eph *= -1000 # Reverse to be from body center and convert to meters
+        eph_rates *= -1000 # Same, reverse and convert
+
+        self._sensor_velocity = eph_rates
+        self._sensor_position = eph
+
     @property
     @abstractmethod
     def metakernel(self):
@@ -49,6 +112,7 @@ class Base(ABC):
     @abstractmethod
     def instrument_id(self):
         pass
+
 
     @property
     def start_time(self):
@@ -92,14 +156,8 @@ class Base(ABC):
     @property
     def center_ephemeris_time(self):
         if not hasattr(self, '_center_ephemeris_time'):
-            self._et = (self.starting_ephemeris_time + self.ending_ephemeris_time)/2
+            self._center_ephemeris_time = (self.starting_ephemeris_time + self.ending_ephemeris_time)/2
         return self._center_ephemeris_time
-
-    @property
-    def dt_ephemeris(self):
-        if not hasattr(self, '_dt_ephemeris'):
-            self._dt_ephemeris = self.ending_ephemeris_time - self.starting_ephemeris_time 
-        return self._dt_ephemeris
 
     @property
     def detector_center(self):
@@ -143,7 +201,7 @@ class Base(ABC):
 
     @property
     def detector_sample_summing(self):
-        return 0
+        return 1
 
     @property
     def detector_line_summing(self):
@@ -184,67 +242,6 @@ class Base(ABC):
         return sun_state[3:6]
 
 class LineScanner(Base):
-    def to_pfeffer_response(self):
-        """
-        Parse the data into a valid pfeffernusse response
-        """
-        data = self.to_dict()
-
-        # Take the flat reponse and create the pfeffernusse obj dicts
-        data['detector_center'] = {'line': data['detector_center'][0],
-                                'sample': data['detector_center'][1]}
-
-        data['sun_velocity'] = [{'x': data['sun_velocity'][0],
-                                'y': data['sun_velocity'][1],
-                                'z': data['sun_velocity'][2]}]
-
-        data['sensor_velocity'] = [{'x' : data['sensor_velocity'][0],
-                                   'y' : data['sensor_velocity'][1],
-                                   'z' : data['sensor_velocity'][2]}]
-
-        data['sun_position'] = [{'x' : data['sun_position'][0],
-                                'y' : data['sun_position'][1],
-                                'z' : data['sun_position'][2]}]
-
-        data['reference_height'] = {'minheight': data['reference_height'][0],
-                                    'maxheight': data['reference_height'][1]}
-
-        return ISD200.from_dict(data)
-
-    @property
-    def sensor_velocity(self):
-        vstate, _ = spice.spkezr(self.target_name,
-                                           self.center_ephemeris_time,
-                                           self.reference_frame,
-                                           'None',
-                                           self.label['TARGET_NAME'])
-        return vstate[3:6]
-    
-    @property
-    def sensor_position(self):
-        loc, _ = spice.spkpos(self.target_name, 
-                              self.center_ephemeris_time, 
-                              self.reference_frame, 
-                              'None', 
-                              self.spacecraft_name)
-        return loc[:4]
-
-    @property
-    def sensor_orientation(self):
-        camera2bodyfixed = spice.pxform(self.instrument_id,
-                                        self.target_name,
-                                        self.center_ephemeris_time)
-        q = spice.m2q(camera2bodyfixed)
-        # Reorder the quaternion
-        return [q[1], q[2], q[3], q[0]]
-
-    @property
-    def line_scan_rate(self):
-        """
-        In the form: [start_line, line_time, exposure_duration]
-        The form below is for a fixed rate line scanner.
-        """
-        return [self.start_line, self.start_time, self.exposure_duration]
 
     @property
     def _scan_duration(self):
@@ -252,6 +249,14 @@ class LineScanner(Base):
         A constant duration scan rate.
         """
         return self.label['LINE_EXPOSURE_DURATION'][0] * 0.001
+
+    @property
+    def line_scan_rate(self):
+        """
+        In the form: [start_line, line_time, exposure_duration]
+        The form below is for a fixed rate line scanner.
+        """
+        return [self.starting_detector_line, self.start_time, self._scan_duration]
 
     @property
     def detector_center(self):
@@ -268,7 +273,7 @@ class LineScanner(Base):
         """
         if not hasattr(self, '_center_ephemeris_time'):
             halflines = self.image_lines / 2
-            center_sclock = self.starting_ephemeris_time + halflines * self.scan_duration
+            center_sclock = self.starting_ephemeris_time + halflines * self._scan_duration
             self._center_ephemeris_time = center_sclock
         return self._center_ephemeris_time
 
@@ -282,15 +287,15 @@ class LineScanner(Base):
 
     @property
     def dt_ephemeris(self):
-        return 80 * self.scan_duration
+        return 80 * self._scan_duration
     
     @property
     def number_of_ephemerides(self):
-        return int(self.scan_duration / self.dt_ephemeris)
+        return int(self._scan_duration / self.dt_ephemeris)
 
     @property
     def dt_quaternion(self):
-        pass
+        return 80 * self._scan_duration
 
     @property
     def sensor_position(self):
@@ -306,20 +311,17 @@ class LineScanner(Base):
 
     @property 
     def number_of_quaternions(self):
-        return int(self.scan_duration / self.dt_quaternion)
-
-    @property
-    def dt_quaternion(self):
-        return 80 * self.scan_duration
+        return int(self._scan_duration / self.dt_quaternion)
 
     @property
     def sensor_orientation(self):
         if not hasattr(self, '_sensororientation'):
             current_et = self.starting_ephemeris_time
+            qua = np.empty((self.number_of_ephemerides, 4))
             for i in range(self.number_of_quaternions):
                 # Find the rotation matrix
                 camera2bodyfixed = spice.pxform(self.spacecraft_id, 
-                                                self.target,
+                                                self.target_name,
                                                 current_et)
                 q = spice.m2q(camera2bodyfixed)
                 qua[i,:3] = q[1:]
@@ -328,76 +330,6 @@ class LineScanner(Base):
             self._sensor_orientation = qua.flatten()
         return self._sensor_orientation
 
-    def _compute_ephemerides(self):
-        eph = np.empty((self.number_of_ephemerides, 3))
-        eph_rates = np.empty(eph.shape)
-        current_et = self.starting_ephemeris_time
-        for i in range(self.number_of_ephemerides):
-            state, _ = spice.spkezr(self.target_name,
-                                    current_et,
-                                    self.target_name, 
-                                    'NONE', 
-                                    self.spacecraft_id) # Should this be ikid?
-            eph[i] = state[:3]
-            eph_rates[i] = state[3:]
-            current_et += self.dt_ephemeris # Increment the time by the number of lines being stepped
-        eph *= -1000 # Reverse to be from body center and convert to meters
-        eph_rates *= -1000 # Same, reverse and convert
-
-        self._sensor_velocity = eph_rates
-        self._sensor_position = eph
 
 class Framer(Base):
-    def to_pfeffer_response(self):
-        """
-        Parse the data into a valid pfeffernusse response
-        """
-        data = self.to_dict()
-
-        # Take the flat reponse and create the pfeffernusse obj dicts
-        data['detector_center'] = {'line': data['detector_center'][0],
-                                'sample': data['detector_center'][1]}
-
-        data['sun_velocity'] = [{'x': data['sun_velocity'][0],
-                                'y': data['sun_velocity'][1],
-                                'z': data['sun_velocity'][2]}]
-
-        data['sensor_velocity'] = [{'x' : data['sensor_velocity'][0],
-                                   'y' : data['sensor_velocity'][1],
-                                   'z' : data['sensor_velocity'][2]}]
-
-        data['sun_position'] = [{'x' : data['sun_position'][0],
-                                'y' : data['sun_position'][1],
-                                'z' : data['sun_position'][2]}]
-
-        data['reference_height'] = {'minheight': data['reference_height'][0],
-                                    'maxheight': data['reference_height'][1]}
-
-        return ISD200.from_dict(data)
-
-    @property
-    def sensor_velocity(self):
-        vstate, _ = spice.spkezr(self.target_name,
-                                           self.center_ephemeris_time,
-                                           self.reference_frame,
-                                           'None',
-                                           self.label['TARGET_NAME'])
-        return vstate[3:6]
-    
-    @property
-    def sensor_position(self):
-        loc, _ = spice.spkpos(self.target_name, 
-                              self.center_ephemeris_time, 
-                              self.reference_frame, 
-                              'None', 
-                              self.spacecraft_name)
-        return loc[:4]
-
-    @property
-    def sensor_orientation(self):
-        camera2bodyfixed = spice.pxform(self.instrument_id,
-                                        self.target_name,
-                                        self.center_ephemeris_time)
-        q = spice.m2q(camera2bodyfixed)
-        # Reorder the quaternion
-        return [q[1], q[2], q[3], q[0]]
+    pass

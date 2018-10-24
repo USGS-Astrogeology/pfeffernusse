@@ -10,6 +10,11 @@ from pfeffernusse.drivers.base import LineScanner
 from pfeffernusse.drivers.distortion import RadialDistortion
 
 class MRO_CTX(LineScanner, RadialDistortion):
+
+    @property
+    def model_name(self):
+        return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
+
     @property
     def metakernel(self):
         metakernel_dir = config.mro
@@ -35,21 +40,13 @@ class MRO_CTX(LineScanner, RadialDistortion):
         return name_lookup[self.label['MISSION_NAME']]
 
     @property
-    def model_name(self):
-        return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
-
-    @property
     def reference_height(self):
         # TODO: This should be a reasonable #
         return 0, 100
 
     @property
-    def odtk(self):
-        return float(spice.gdpool('INS{}_OD_K'.format(self.ikid), 0, 1))
-
-    @property
     def image_samples(self):
         return self.label['LINE_SAMPLES']
-        
+
 
 
