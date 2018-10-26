@@ -2,7 +2,7 @@ import datetime
 
 import six
 import typing
-
+import numpy as np
 
 def _deserialize(data, klass):
     """Deserializes dict, list, str into an object.
@@ -14,6 +14,7 @@ def _deserialize(data, klass):
     """
     if data is None:
         return None
+
     if klass in six.integer_types or klass in (float, str, bool):
         return _deserialize_primitive(data, klass)
     elif klass == object:
@@ -50,7 +51,7 @@ def _deserialize_primitive(data, klass):
 
 
 def _deserialize_object(value):
-    """Return a original value.
+    """Return an original value.
 
     :return: object.
     """
@@ -99,9 +100,10 @@ def deserialize_model(data, klass):
     """
     instance = klass()
 
-    if not instance.swagger_types:
+    if not instance.openapi_types:
         return data
-    for attr, attr_type in six.iteritems(instance.swagger_types):
+
+    for attr, attr_type in six.iteritems(instance.openapi_types):
         if data is not None \
                 and instance.attribute_map[attr] in data \
                 and isinstance(data, (list, dict)):

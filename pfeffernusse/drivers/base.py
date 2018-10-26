@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from dateutil import parser
 import numpy as np
+import pvl
 import spiceypy as spice
 
 from pfeffernusse.drivers import distortion
@@ -20,7 +21,7 @@ class Base(ABC):
 
     """
     def __init__(self, label, *args, **kwargs):
-        self.label = label
+        self.label = pvl.loads(label)
 
     def __enter__(self):
         """
@@ -40,7 +41,7 @@ class Base(ABC):
         spice.unload(self.metakernel)
     
     def to_dict(self):
-        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__') or p.startswith('_')}
+        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
 
     def to_pfeffer_response(self):
         """
@@ -116,11 +117,15 @@ class Base(ABC):
 
     @property
     def start_time(self):
-        return parser.parse(self.label['START_TIME'])
+        return self.label['START_TIME']
 
     @property 
     def image_lines(self):
-        return self.label['LINES']
+        return self.label['IMAGE']['LINES']
+    
+    @property 
+    def image_samples(self):
+        return self.label['IMAGE']['LINE_SAMPLES']
 
     @property
     def interpolation_method(self):
@@ -130,10 +135,6 @@ class Base(ABC):
     def number_of_ephemerides(self):
         return 1
 
-    @property 
-    def image_samples(self):
-        return self.label['SAMPLES']
-    
     @property
     def target_name(self):
         return self.label['TARGET_NAME']
@@ -146,11 +147,13 @@ class Base(ABC):
         return self._starting_ephemeris_time
     
     @property
+    def _exposure_duration(self):
+        return self.label['EXPOSURE_DURATION'].value * 0.001  # Scale to seconds
+
+    @property
     def ending_ephemeris_time(self):
         if not hasattr(self, '_ending_ephemeris_time'):
-            exposure_duration = self.label['EXPOSURE_DURATION'].value
-            exposure_duration = exposure_duration * 0.001  # Scale to seconds
-            self._ending_ephemeris_time = spice.scs2e(self.spacecraft_id, self.label['SPACECRAFT_CLOCK_STOP_COUNT']) + (exposure_duration / 2.0)
+            self._ending_ephemeris_time = spice.scs2e(self.spacecraft_id, self.label['SPACECRAFT_CLOCK_STOP_COUNT']) + (self._exposure_duration / 2.0)
         return self._ending_ephemeris_time
 
     @property
@@ -205,7 +208,7 @@ class Base(ABC):
 
     @property
     def detector_line_summing(self):
-        return self.label.get(['SAMPLING_FACTOR'], None)
+        return self.label.get('SAMPLING_FACTOR', 1)
 
     @property 
     def semimajor(self):
@@ -240,6 +243,35 @@ class Base(ABC):
                                      self.label['TARGET_NAME'])
 
         return sun_state[3:6]
+    
+    @property
+    def sensor_position(self):
+        if not hasattr(self, '_sensor_position'):
+            self._compute_ephemerides()
+        return self._sensor_position.tolist()
+
+    @property
+    def sensor_velocity(self):
+        if not hasattr(self, '_sensor_velocity'):
+            self._compute_ephemerides()
+        return self._sensor_velocity.tolist()
+
+    @property
+    def sensor_orientation(self):
+        if not hasattr(self, '_sensororientation'):
+            current_et = self.starting_ephemeris_time
+            qua = np.empty((self.number_of_ephemerides, 4))
+            for i in range(self.number_of_quaternions):
+                # Find the rotation matrix
+                camera2bodyfixed = spice.pxform(self.spacecraft_id, 
+                                                self.target_name,
+                                                current_et)
+                q = spice.m2q(camera2bodyfixed)
+                qua[i,:3] = q[1:]
+                qua[i,3] = q[0]
+                current_et += getattr(self, 'dt_quaternion', 0)
+            self._sensor_orientation = qua
+        return self._sensor_orientation.tolist()
 
 class LineScanner(Base):
 
@@ -261,8 +293,8 @@ class LineScanner(Base):
     @property
     def detector_center(self):
         if not hasattr(self, '_detector_center'):
-            center_sample = float(spice.gdpool('INS{}_BORESIGHT_SAMPLE'.format(self.ikid), 0, 1))
-            center_line = float(spice.gdpool('INS{}_BORESIGHT_LINE'.format(self.ikid), 0, 1))
+            center_sample = float(spice.gdpool('INS{}_BORESIGHT_SAMPLE'.format(self.ikid), 0, 1)[0])
+            center_line = float(spice.gdpool('INS{}_BORESIGHT_LINE'.format(self.ikid), 0, 1)[0])
             self._detector_center = [center_sample, center_line]
         return self._detector_center
 
@@ -292,44 +324,21 @@ class LineScanner(Base):
     @property
     def number_of_ephemerides(self):
         return int(self._scan_duration / self.dt_ephemeris)
-
-    @property
-    def dt_quaternion(self):
-        return 80 * self._scan_duration
-
-    @property
-    def sensor_position(self):
-        if not hasattr(self, '_sensor_position'):
-            self._compute_ephemerides()
-        return self._sensor_position
-
-    @property
-    def sensor_velocity(self):
-        if not hasattr(self, '_sensor_velocity'):
-            self._compute_ephemerides()
-        return self._sensor_velocity
-
+    
     @property 
     def number_of_quaternions(self):
         return int(self._scan_duration / self.dt_quaternion)
 
     @property
-    def sensor_orientation(self):
-        if not hasattr(self, '_sensororientation'):
-            current_et = self.starting_ephemeris_time
-            qua = np.empty((self.number_of_ephemerides, 4))
-            for i in range(self.number_of_quaternions):
-                # Find the rotation matrix
-                camera2bodyfixed = spice.pxform(self.spacecraft_id, 
-                                                self.target_name,
-                                                current_et)
-                q = spice.m2q(camera2bodyfixed)
-                qua[i,:3] = q[1:]
-                qua[i,3] = q[0]
-                current_et += self.dt_quaternion
-            self._sensor_orientation = qua.flatten()
-        return self._sensor_orientation
-
+    def dt_quaternion(self):
+        return 80 * self._scan_duration
 
 class Framer(Base):
-    pass
+    
+    @property
+    def number_of_ephemerides(self):
+        return 1
+
+    @property
+    def number_of_quaternions(self):
+        return 1

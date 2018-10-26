@@ -20,6 +20,7 @@ class MRO_CTX(LineScanner, RadialDistortion):
         metakernel_dir = config.mro
         mks = sorted(glob(os.path.join(metakernel_dir,'*.tm')))
         if not hasattr(self, '_metakernel'):
+            self._metakernel = None
             for mk in mks:
                 if str(self.start_time.year) in os.path.basename(mk):
                     self._metakernel = mk
@@ -30,14 +31,14 @@ class MRO_CTX(LineScanner, RadialDistortion):
         id_lookup = {
             'CONTEXT CAMERA':'MRO_CTX'
         }
-        return id_lookup[self.label['INSTRUMENT_ID']]
+        return id_lookup[self.label['INSTRUMENT_NAME']]
     
     @property
     def spacecraft_name(self):
         name_lookup = {
             'MARS_RECONNAISSANCE_ORBITER': 'MRO'
         }
-        return name_lookup[self.label['MISSION_NAME']]
+        return name_lookup[self.label['SPACECRAFT_NAME']]
 
     @property
     def reference_height(self):
@@ -45,8 +46,5 @@ class MRO_CTX(LineScanner, RadialDistortion):
         return 0, 100
 
     @property
-    def image_samples(self):
-        return self.label['LINE_SAMPLES']
-
-
-
+    def _exposure_duration(self):
+        return self.label['LINE_EXPOSURE_DURATION'].value * 0.001  # Scale to seconds

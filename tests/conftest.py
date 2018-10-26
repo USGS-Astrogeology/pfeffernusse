@@ -2,8 +2,8 @@ import numpy as np
 
 
 class SimpleSpice():
-    def scs2e(self, x, y):
-        return y
+    def scs2e(self, *args):
+        return 0.1
     def bods2c(self, x):
         return -12345
     def gdpool(self, key, x, length):

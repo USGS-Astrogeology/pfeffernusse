@@ -1,10 +1,21 @@
 import pytest
 
+from pfeffernusse.drivers.mro_driver import MRO_CTX
+from pfeffernusse.drivers import mro_driver, base, distortion
+from pfeffernusse.models.isd200 import ISD200
+
+# 'Mock' the spice module where it is imported
 from conftest import SimpleSpice
+
+simplespice = SimpleSpice()
+base.spice = simplespice
+mro_driver.spice = simplespice
+distortion.spice = simplespice
+
 
 @pytest.fixture
 def mroctx_label():
-    """
+    return """
     PDS_VERSION_ID = PDS3
     FILE_NAME = "D10_031011_1864_XI_06N201W.IMG"
     RECORD_TYPE = FIXED_LENGTH
@@ -50,4 +61,14 @@ def mroctx_label():
     END_OBJECT = IMAGE
     END"""
 
-    
+
+def test_get_dict(mroctx_label):
+    with MRO_CTX(mroctx_label) as m:
+        d = m.to_dict()
+    assert isinstance(d, dict)
+
+def test_mdis_as_pfeffer_isd(mdislabel):
+    with MRO_CTX(mdislabel) as m:
+        isd = m.to_pfeffer_response()
+    # TODO: Need better tests here
+    assert isinstance(isd, ISD200)
