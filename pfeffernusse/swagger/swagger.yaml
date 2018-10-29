@@ -103,12 +103,15 @@ definitions:
     type: "object"
     required:
     - "unit"
-    - "locations"
     properties:
       unit:
         type: "string"
         description: "The unit that positions are given in, e.g., 'm'"
       locations:
+        type: "array"
+        items:
+          type: "number"
+      velocities:
         type: "array"
         items:
           type: "number"
@@ -130,10 +133,8 @@ definitions:
         items:
           type: "array"
           items:
-            type: "array"
-            items:
-              type: "number"
-              description: "The four element vector quaternion"
+            type: "number"
+            description: "The four element vector quaternion"
   request_ISD:
     type: "object"
     required: 
@@ -405,6 +406,7 @@ definitions:
   ISD200_radii:
     required:
     - "semimajor"
+    - "units"
     properties:
       semimajor:
         type: "number"

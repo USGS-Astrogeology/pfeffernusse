@@ -37,7 +37,7 @@ class Messenger(Framer, TransverseDistortion):
     def focal_length(self):
         """
         """
-        coeffs = spice.gdpool('INS{}_FL_TEMP_COEFFS '.format(self.ikid), 0, 5)
+        coeffs = spice.gdpool('INS{}_FL_TEMP_COEFFS '.format(self.ikid), 0, 6)
 
         # reverse coeffs, mdis coeffs are listed a_0, a_1, a_2 ... a_n where
         # numpy wants them a_n, a_n-1, a_n-2 ... a_0

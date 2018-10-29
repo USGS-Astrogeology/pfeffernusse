@@ -73,7 +73,7 @@ class Base(ABC):
                                     'unit': 'm'}
 
         data['sensor_position'] = {'unit':'m',
-                                   'locations':[data['sensor_position']]}
+                                   'locations':data['sensor_position']}
 
         data['sensor_orientation'] = {'quaternions':[data['sensor_orientation']]}
         
@@ -88,7 +88,7 @@ class Base(ABC):
                                 'locations': data['sun_position']}
         
         data['sun_velocity'] = {'unit':'m',
-                                'locations': data['sun_velocity']}
+                                'velocities': data['sun_velocity']}
 
         return ISD200.from_dict(data)
     
@@ -197,11 +197,15 @@ class Base(ABC):
 
     @property 
     def focal2pixel_lines(self):
-        return list(spice.gdpool('INS{}_TRANSX'.format(self.ikid), 0, 3))
+        f2pl = spice.gdpool('INS{}_TRANSY'.format(self.ikid), 0, 3)
+        func = np.vectorize(lambda x: 1/x if x != 0 else x)
+        return func(f2pl)
     
     @property 
     def focal2pixel_samples(self):
-        return list(spice.gdpool('INS{}_TRANSX'.format(self.ikid), 0, 3))
+        f2ps = spice.gdpool('INS{}_TRANSX'.format(self.ikid), 0, 3)
+        func = np.vectorize(lambda x: 1/x if x != 0 else x)
+        return func(f2ps)
         
     @property 
     def focal_length(self):

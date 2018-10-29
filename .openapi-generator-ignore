@@ -21,3 +21,6 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
+
+# Change made to use __extra__ instead of __origin__ for PY3.7
+pfeffernusse/util.py
