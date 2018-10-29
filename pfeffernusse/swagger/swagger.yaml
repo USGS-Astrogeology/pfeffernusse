@@ -2,7 +2,7 @@
 swagger: "2.0"
 info:
   description: "A SpiceAPI for extracting NAIF Spice Data"
-  version: "0.1.1"
+  version: "0.1.2"
   title: "Pfeffernusse"
   contact:
     email: "jlaura@usgs.gov"
@@ -15,18 +15,18 @@ schemes:
 - "http"
 paths:
   /pds/:
-    get:
+    post:
       summary: "Converts Image Labels to ISDs"
       description: "Adds an item to the system"
       operationId: "create_isd"
       produces:
-      - "application/json"
+        - "application/json"
       parameters:
-      - in: "body"
-        name: "label"
-        required: true
-        schema:
-          $ref: "#/definitions/request_ISD"
+        - in: "body"
+          name: "label"
+          required: true
+          schema:
+            $ref: "#/definitions/request_ISD"
       responses:
         200:
           description: "Successful Label Translation"
@@ -102,16 +102,16 @@ definitions:
   XYZ:
     type: "object"
     required:
-    - "x"
-    - "y"
-    - "z"
+    - "unit"
+    - "locations"
     properties:
-      x:
-        type: "number"
-      y:
-        type: "number"
-      z:
-        type: "number"
+      unit:
+        type: "string"
+        description: "The unit that positions are given in, e.g., 'm'"
+      locations:
+        type: "array"
+        items:
+          type: "number"
     title: "XYZ Position or Velocity"
     description: "An object to hold the x,y,z position or velocity of an object in\
       \ meters"
@@ -119,24 +119,32 @@ definitions:
       z: 6.8468526983526398765889098285697400569915771484375
       y: 1.489415909854170383397331534069962799549102783203125
       x: 1.024645700144157789424070870154537260532379150390625
+  Quaternions:
+    type: "object"
+    required:
+      - "quaternions"
+    properties:
+      quaternions:
+        type: "array"
+        description: "Orientation of the sensor provided in quaternions"
+        items:
+          type: "array"
+          items:
+            type: "array"
+            items:
+              type: "number"
+              description: "The four element vector quaternion"
   request_ISD:
     type: "object"
+    required: 
+      - label
     properties:
       label:
         type: "string"
-        format: "uuid"
-  Quaternion:
-    title: "Quaternion"
-    type: "array"
-    description: "Each quaternion is of the general form: (scalar, vector component,\
-      \ vector component,vector component).The specific form used is that described\
-      \ in the NAIF Quaternions whitepaper under 'SPICE Quaternions' available at:\
-      \ ftp: //naif.jpl.nasa.gov/pub/naif/misc/Quaternion_White_Paper/Quaternions_White_Paper.pdf"
-    items:
-      type: "number"
   ISD200:
     type: "object"
     required:
+    - "model_name"
     - "focal2pixel_lines"
     - "focal2pixel_samples"
     - "focal_length_model"
@@ -154,6 +162,9 @@ definitions:
       center_ephemeris_time:
         type: "number"
         description: "The center ephemeris time of the image"
+      model_name:
+        type: "string"
+        description: "The name of the model to be instantiated"
       starting_ephemeris_time:
         type: "number"
         description: "The starting ephemeris time of the image"
@@ -188,30 +199,15 @@ definitions:
         items:
           type: "number"
       sensor_location:
-        type: "array"
-        description: "(X, Y, Z) location of sensor in body-fixed frame."
-        items:
-          $ref: "#/definitions/XYZ"
+        $ref: "#/definitions/XYZ"
       sensor_velocity:
-        type: "array"
-        description: "(v_x, v_y, v_z) velocity of sensor in body-fixed frame."
-        items:
-          $ref: "#/definitions/XYZ"
+        $ref: "#/definitions/XYZ"
       sun_position:
-        type: "array"
-        description: "(x, y,z) of the sun in body-fixed frame."
-        items:
-          $ref: "#/definitions/XYZ"
+        $ref: "#/definitions/XYZ"
       sun_velocity:
-        type: "array"
-        description: "(v_x, v_y, v_z) velocity of sun in body-fixed frame."
-        items:
-          $ref: "#/definitions/XYZ"
+        $ref: "#/definitions/XYZ"
       sensor_orientation:
-        type: "array"
-        description: "Orientation of the sensor provided in quaternions"
-        items:
-          $ref: "#/definitions/Quaternion"
+        $ref: "#/definitions/Quaternions"
       line_scan_rate:
         type: "array"
         description: "The line rates of the detector map with the associated start\
@@ -231,16 +227,6 @@ definitions:
       detector_line_summing:
         type: "number"
         description: "The summing in the line-direction"
-      apply_light_time_correction:
-        type: "boolean"
-        description: "A flag to indcate whether the light-time correction should be\
-          \ applied"
-      number_of_ephemerides:
-        type: "number"
-        description: "The number of emphemeris points"
-      number_of_quaternions:
-        type: "number"
-        description: "The number of quaternions"
       dt_ephemeris:
         type: "number"
         description: "The time between each ephemeris point."
@@ -432,11 +418,15 @@ definitions:
     required:
     - "maxheight"
     - "minheight"
+    - "unit"
     properties:
       minheight:
         type: "number"
       maxheight:
         type: "number"
+      unit:
+        type: "string"
+        description: "The unit that heights are provided in"
     description: "Used for determining the intersection of the look vector with the\
       \ ellipsoid, measured in meters"
-    example: "{\"minheight\":100,\"maxheight\":1000}"
+    example: "{\"minheight\":100,\"maxheight\":1000,\"unit\":\"m\"}"

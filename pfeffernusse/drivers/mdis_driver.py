@@ -12,6 +12,12 @@ from pfeffernusse.drivers.distortion import TransverseDistortion
 
 
 class Messenger(Framer, TransverseDistortion):
+    id_lookup = {
+        'MDIS-WAC': 'MSGR_MDIS_WAC',
+        'MDIS-NAC':'MSGR_MDIS_NAC',
+        'MERCURY DUAL IMAGING SYSTEM NARROW ANGLE CAMERA':'MSGR_MDIS_NAC',
+        'MERCURY DUAL IMAGING SYSTEM WIDE ANGLE CAMERA':'MSGR_MDIS_WAC'
+    }
 
     @property
     def metakernel(self):
@@ -25,12 +31,7 @@ class Messenger(Framer, TransverseDistortion):
 
     @property
     def instrument_id(self):
-        id_lookup = {
-            'MDIS-NAC':'MSGR_MDIS_NAC',
-            'MERCURY DUAL IMAGING SYSTEM NARROW ANGLE CAMERA':'MSGR_MDIS_NAC',
-            'MERCURY DUAL IMAGING SYSTEM WIDE ANGLE CAMERA':'MSGR_MDIS_WAC'
-        }
-        return id_lookup[self.label['INSTRUMENT_ID']]
+        return self.id_lookup[self.label['INSTRUMENT_ID']]
 
     @property
     def focal_length(self):
@@ -53,3 +54,11 @@ class Messenger(Framer, TransverseDistortion):
     def reference_height(self):
         # TODO: This should be a reasonable #
         return 0, 100
+
+    @property
+    def starting_detector_sample(self):
+        return int(spice.gdpool('INS{}_FPUBIN_START_SAMPLE'.format(self.ikid), 0, 1)[0])
+    
+    @property
+    def starting_detector_line(self):
+        return int(spice.gdpool('INS{}_FPUBIN_START_LINE'.format(self.ikid), 0, 1)[0])

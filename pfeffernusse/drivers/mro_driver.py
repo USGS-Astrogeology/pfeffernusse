@@ -10,7 +10,10 @@ from pfeffernusse.drivers.base import LineScanner
 from pfeffernusse.drivers.distortion import RadialDistortion
 
 class MRO_CTX(LineScanner, RadialDistortion):
-
+    id_lookup = {
+            'CONTEXT CAMERA':'MRO_CTX'
+    }
+    
     @property
     def model_name(self):
         return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
@@ -28,10 +31,8 @@ class MRO_CTX(LineScanner, RadialDistortion):
 
     @property
     def instrument_id(self):
-        id_lookup = {
-            'CONTEXT CAMERA':'MRO_CTX'
-        }
-        return id_lookup[self.label['INSTRUMENT_NAME']]
+        
+        return self.id_lookup[self.label['INSTRUMENT_NAME']]
     
     @property
     def spacecraft_name(self):

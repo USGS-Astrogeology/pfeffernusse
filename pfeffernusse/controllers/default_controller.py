@@ -7,7 +7,7 @@ from pfeffernusse.models.request_isd import RequestISD  # noqa: E501
 from pfeffernusse import util
 from pfeffernusse import drivers
 
-def create_isd(request_isd):  # noqa: E501
+def create_isd():  # noqa: E501
     """Converts Image Labels to ISDs
 
     Adds an item to the system # noqa: E501
@@ -20,7 +20,6 @@ def create_isd(request_isd):  # noqa: E501
     if connexion.request.is_json:
         request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
     return drivers.load(request_isd.label)
-
 
 def get_metakernel(mission, year, version):  # noqa: E501
     """Get a specific kernel

@@ -40,6 +40,13 @@ class Base(ABC):
         """
         spice.unload(self.metakernel)
     
+    def is_valid(self):
+        try:
+            iid = self.instrument_id
+            return True
+        except:
+            return False
+
     def to_dict(self):
         return {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
 
@@ -76,6 +83,12 @@ class Base(ABC):
         data['radii'] = {'semimajor':data['semimajor'],
                          'semiminor':data['semiminor'],
                          'unit': 'm'}
+        
+        data['sun_position'] = {'unit': 'm',
+                                'locations': data['sun_position']}
+        
+        data['sun_velocity'] = {'unit':'m',
+                                'locations': data['sun_velocity']}
 
         return ISD200.from_dict(data)
     
@@ -91,9 +104,9 @@ class Base(ABC):
         for i in range(self.number_of_ephemerides):
             state, _ = spice.spkezr(self.target_name,
                                     current_et,
-                                    self.target_name, 
+                                    self.reference_frame, 
                                     'NONE', 
-                                    self.spacecraft_id) # Should this be ikid?
+                                    self.spacecraft_name) # If this is the sensor, insufficient, if this is the spacecraft, it works? Huh?
             eph[i] = state[:3]
             eph_rates[i] = state[3:]
             # Increment the time by the number of lines being stepped
@@ -138,7 +151,11 @@ class Base(ABC):
     @property
     def target_name(self):
         return self.label['TARGET_NAME']
-    
+
+    @property
+    def _target_id(self):
+        return spice.bodn2c(self.label['TARGET_NAME'])
+
     @property
     def starting_ephemeris_time(self):
         if not hasattr(self, '_starting_ephemeris_time'):
@@ -196,11 +213,11 @@ class Base(ABC):
 
     @property
     def starting_detector_line(self):
-        return 0
+        return 1
     
     @property
     def starting_detector_sample(self):
-        return 0
+        return 1
 
     @property
     def detector_sample_summing(self):
@@ -232,7 +249,7 @@ class Base(ABC):
                                      'NONE',
                                      self.label['TARGET_NAME'])
 
-        return sun_state[:4]
+        return sun_state[:4].tolist()
 
     @property
     def sun_velocity(self):
@@ -242,7 +259,7 @@ class Base(ABC):
                                      'NONE',
                                      self.label['TARGET_NAME'])
 
-        return sun_state[3:6]
+        return sun_state[3:6].tolist()
     
     @property
     def sensor_position(self):
@@ -263,8 +280,8 @@ class Base(ABC):
             qua = np.empty((self.number_of_ephemerides, 4))
             for i in range(self.number_of_quaternions):
                 # Find the rotation matrix
-                camera2bodyfixed = spice.pxform(self.spacecraft_id, 
-                                                self.target_name,
+                camera2bodyfixed = spice.pxform(self.instrument_id, 
+                                                self.reference_frame,
                                                 current_et)
                 q = spice.m2q(camera2bodyfixed)
                 qua[i,:3] = q[1:]
