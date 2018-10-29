@@ -10,9 +10,10 @@ from pfeffernusse.models.isd200_detector_center import ISD200DetectorCenter  # n
 from pfeffernusse.models.isd200_focal_length_model import ISD200FocalLengthModel  # noqa: F401,E501
 from pfeffernusse.models.isd200_radii import ISD200Radii  # noqa: F401,E501
 from pfeffernusse.models.isd200_reference_height import ISD200ReferenceHeight  # noqa: F401,E501
+from pfeffernusse.models.isd200_sensor_position import ISD200SensorPosition  # noqa: F401,E501
+from pfeffernusse.models.isd200_sun_position import ISD200SunPosition  # noqa: F401,E501
 from pfeffernusse.models.optical_distortion import OpticalDistortion  # noqa: F401,E501
 from pfeffernusse.models.quaternions import Quaternions  # noqa: F401,E501
-from pfeffernusse.models.xyz import XYZ  # noqa: F401,E501
 from pfeffernusse import util
 
 
@@ -22,15 +23,19 @@ class ISD200(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, detector_center: ISD200DetectorCenter=None, center_ephemeris_time: float=None, model_name: str=None, starting_ephemeris_time: float=None, focal_length_model: ISD200FocalLengthModel=None, image_lines: float=None, image_samples: float=None, radii: ISD200Radii=None, optical_distortion: OpticalDistortion=None, starting_detector_sample: float=None, starting_detector_line: float=None, focal2pixel_samples: List[float]=None, focal2pixel_lines: List[float]=None, sensor_location: XYZ=None, sensor_velocity: XYZ=None, sun_position: XYZ=None, sun_velocity: XYZ=None, sensor_orientation: Quaternions=None, line_scan_rate: List[List[float]]=None, detector_sample_summing: float=None, detector_line_summing: float=None, dt_ephemeris: float=None, t0_ephemeris: float=None, dt_quaternion: float=None, t0_quaternion: float=None, reference_height: ISD200ReferenceHeight=None, interpolation_method: str=None):  # noqa: E501
+    def __init__(self, name_platform: str=None, name_sensor: str=None, detector_center: ISD200DetectorCenter=None, center_ephemeris_time: float=None, name_model: str=None, starting_ephemeris_time: float=None, focal_length_model: ISD200FocalLengthModel=None, image_lines: float=None, image_samples: float=None, radii: ISD200Radii=None, optical_distortion: OpticalDistortion=None, starting_detector_sample: float=None, starting_detector_line: float=None, focal2pixel_samples: List[float]=None, focal2pixel_lines: List[float]=None, sensor_position: ISD200SensorPosition=None, sun_position: ISD200SunPosition=None, sensor_orientation: Quaternions=None, line_scan_rate: List[List[float]]=None, detector_sample_summing: float=None, detector_line_summing: float=None, dt_ephemeris: float=None, t0_ephemeris: float=None, dt_quaternion: float=None, t0_quaternion: float=None, reference_height: ISD200ReferenceHeight=None, interpolation_method: str=None):  # noqa: E501
         """ISD200 - a model defined in OpenAPI
 
+        :param name_platform: The name_platform of this ISD200.  # noqa: E501
+        :type name_platform: str
+        :param name_sensor: The name_sensor of this ISD200.  # noqa: E501
+        :type name_sensor: str
         :param detector_center: The detector_center of this ISD200.  # noqa: E501
         :type detector_center: ISD200DetectorCenter
         :param center_ephemeris_time: The center_ephemeris_time of this ISD200.  # noqa: E501
         :type center_ephemeris_time: float
-        :param model_name: The model_name of this ISD200.  # noqa: E501
-        :type model_name: str
+        :param name_model: The name_model of this ISD200.  # noqa: E501
+        :type name_model: str
         :param starting_ephemeris_time: The starting_ephemeris_time of this ISD200.  # noqa: E501
         :type starting_ephemeris_time: float
         :param focal_length_model: The focal_length_model of this ISD200.  # noqa: E501
@@ -51,14 +56,10 @@ class ISD200(Model):
         :type focal2pixel_samples: List[float]
         :param focal2pixel_lines: The focal2pixel_lines of this ISD200.  # noqa: E501
         :type focal2pixel_lines: List[float]
-        :param sensor_location: The sensor_location of this ISD200.  # noqa: E501
-        :type sensor_location: XYZ
-        :param sensor_velocity: The sensor_velocity of this ISD200.  # noqa: E501
-        :type sensor_velocity: XYZ
+        :param sensor_position: The sensor_position of this ISD200.  # noqa: E501
+        :type sensor_position: ISD200SensorPosition
         :param sun_position: The sun_position of this ISD200.  # noqa: E501
-        :type sun_position: XYZ
-        :param sun_velocity: The sun_velocity of this ISD200.  # noqa: E501
-        :type sun_velocity: XYZ
+        :type sun_position: ISD200SunPosition
         :param sensor_orientation: The sensor_orientation of this ISD200.  # noqa: E501
         :type sensor_orientation: Quaternions
         :param line_scan_rate: The line_scan_rate of this ISD200.  # noqa: E501
@@ -81,9 +82,11 @@ class ISD200(Model):
         :type interpolation_method: str
         """
         self.openapi_types = {
+            'name_platform': str,
+            'name_sensor': str,
             'detector_center': ISD200DetectorCenter,
             'center_ephemeris_time': float,
-            'model_name': str,
+            'name_model': str,
             'starting_ephemeris_time': float,
             'focal_length_model': ISD200FocalLengthModel,
             'image_lines': float,
@@ -94,10 +97,8 @@ class ISD200(Model):
             'starting_detector_line': float,
             'focal2pixel_samples': List[float],
             'focal2pixel_lines': List[float],
-            'sensor_location': XYZ,
-            'sensor_velocity': XYZ,
-            'sun_position': XYZ,
-            'sun_velocity': XYZ,
+            'sensor_position': ISD200SensorPosition,
+            'sun_position': ISD200SunPosition,
             'sensor_orientation': Quaternions,
             'line_scan_rate': List[List[float]],
             'detector_sample_summing': float,
@@ -111,9 +112,11 @@ class ISD200(Model):
         }
 
         self.attribute_map = {
+            'name_platform': 'name_platform',
+            'name_sensor': 'name_sensor',
             'detector_center': 'detector_center',
             'center_ephemeris_time': 'center_ephemeris_time',
-            'model_name': 'model_name',
+            'name_model': 'name_model',
             'starting_ephemeris_time': 'starting_ephemeris_time',
             'focal_length_model': 'focal_length_model',
             'image_lines': 'image_lines',
@@ -124,10 +127,8 @@ class ISD200(Model):
             'starting_detector_line': 'starting_detector_line',
             'focal2pixel_samples': 'focal2pixel_samples',
             'focal2pixel_lines': 'focal2pixel_lines',
-            'sensor_location': 'sensor_location',
-            'sensor_velocity': 'sensor_velocity',
+            'sensor_position': 'sensor_position',
             'sun_position': 'sun_position',
-            'sun_velocity': 'sun_velocity',
             'sensor_orientation': 'sensor_orientation',
             'line_scan_rate': 'line_scan_rate',
             'detector_sample_summing': 'detector_sample_summing',
@@ -140,9 +141,11 @@ class ISD200(Model):
             'interpolation_method': 'interpolation_method'
         }
 
+        self._name_platform = name_platform
+        self._name_sensor = name_sensor
         self._detector_center = detector_center
         self._center_ephemeris_time = center_ephemeris_time
-        self._model_name = model_name
+        self._name_model = name_model
         self._starting_ephemeris_time = starting_ephemeris_time
         self._focal_length_model = focal_length_model
         self._image_lines = image_lines
@@ -153,10 +156,8 @@ class ISD200(Model):
         self._starting_detector_line = starting_detector_line
         self._focal2pixel_samples = focal2pixel_samples
         self._focal2pixel_lines = focal2pixel_lines
-        self._sensor_location = sensor_location
-        self._sensor_velocity = sensor_velocity
+        self._sensor_position = sensor_position
         self._sun_position = sun_position
-        self._sun_velocity = sun_velocity
         self._sensor_orientation = sensor_orientation
         self._line_scan_rate = line_scan_rate
         self._detector_sample_summing = detector_sample_summing
@@ -178,6 +179,56 @@ class ISD200(Model):
         :rtype: ISD200
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def name_platform(self) -> str:
+        """Gets the name_platform of this ISD200.
+
+        The name of the sensor platform, e.g., the spacecraft.  # noqa: E501
+
+        :return: The name_platform of this ISD200.
+        :rtype: str
+        """
+        return self._name_platform
+
+    @name_platform.setter
+    def name_platform(self, name_platform: str):
+        """Sets the name_platform of this ISD200.
+
+        The name of the sensor platform, e.g., the spacecraft.  # noqa: E501
+
+        :param name_platform: The name_platform of this ISD200.
+        :type name_platform: str
+        """
+        if name_platform is None:
+            raise ValueError("Invalid value for `name_platform`, must not be `None`")  # noqa: E501
+
+        self._name_platform = name_platform
+
+    @property
+    def name_sensor(self) -> str:
+        """Gets the name_sensor of this ISD200.
+
+        The name of the sensor, e.g., MSGR_MDIS_NAC.  # noqa: E501
+
+        :return: The name_sensor of this ISD200.
+        :rtype: str
+        """
+        return self._name_sensor
+
+    @name_sensor.setter
+    def name_sensor(self, name_sensor: str):
+        """Sets the name_sensor of this ISD200.
+
+        The name of the sensor, e.g., MSGR_MDIS_NAC.  # noqa: E501
+
+        :param name_sensor: The name_sensor of this ISD200.
+        :type name_sensor: str
+        """
+        if name_sensor is None:
+            raise ValueError("Invalid value for `name_sensor`, must not be `None`")  # noqa: E501
+
+        self._name_sensor = name_sensor
 
     @property
     def detector_center(self) -> ISD200DetectorCenter:
@@ -224,29 +275,29 @@ class ISD200(Model):
         self._center_ephemeris_time = center_ephemeris_time
 
     @property
-    def model_name(self) -> str:
-        """Gets the model_name of this ISD200.
+    def name_model(self) -> str:
+        """Gets the name_model of this ISD200.
 
         The name of the model to be instantiated  # noqa: E501
 
-        :return: The model_name of this ISD200.
+        :return: The name_model of this ISD200.
         :rtype: str
         """
-        return self._model_name
+        return self._name_model
 
-    @model_name.setter
-    def model_name(self, model_name: str):
-        """Sets the model_name of this ISD200.
+    @name_model.setter
+    def name_model(self, name_model: str):
+        """Sets the name_model of this ISD200.
 
         The name of the model to be instantiated  # noqa: E501
 
-        :param model_name: The model_name of this ISD200.
-        :type model_name: str
+        :param name_model: The name_model of this ISD200.
+        :type name_model: str
         """
-        if model_name is None:
-            raise ValueError("Invalid value for `model_name`, must not be `None`")  # noqa: E501
+        if name_model is None:
+            raise ValueError("Invalid value for `name_model`, must not be `None`")  # noqa: E501
 
-        self._model_name = model_name
+        self._name_model = name_model
 
     @property
     def starting_ephemeris_time(self) -> float:
@@ -491,88 +542,46 @@ class ISD200(Model):
         self._focal2pixel_lines = focal2pixel_lines
 
     @property
-    def sensor_location(self) -> XYZ:
-        """Gets the sensor_location of this ISD200.
+    def sensor_position(self) -> ISD200SensorPosition:
+        """Gets the sensor_position of this ISD200.
 
 
-        :return: The sensor_location of this ISD200.
-        :rtype: XYZ
+        :return: The sensor_position of this ISD200.
+        :rtype: ISD200SensorPosition
         """
-        return self._sensor_location
+        return self._sensor_position
 
-    @sensor_location.setter
-    def sensor_location(self, sensor_location: XYZ):
-        """Sets the sensor_location of this ISD200.
+    @sensor_position.setter
+    def sensor_position(self, sensor_position: ISD200SensorPosition):
+        """Sets the sensor_position of this ISD200.
 
 
-        :param sensor_location: The sensor_location of this ISD200.
-        :type sensor_location: XYZ
+        :param sensor_position: The sensor_position of this ISD200.
+        :type sensor_position: ISD200SensorPosition
         """
 
-        self._sensor_location = sensor_location
+        self._sensor_position = sensor_position
 
     @property
-    def sensor_velocity(self) -> XYZ:
-        """Gets the sensor_velocity of this ISD200.
-
-
-        :return: The sensor_velocity of this ISD200.
-        :rtype: XYZ
-        """
-        return self._sensor_velocity
-
-    @sensor_velocity.setter
-    def sensor_velocity(self, sensor_velocity: XYZ):
-        """Sets the sensor_velocity of this ISD200.
-
-
-        :param sensor_velocity: The sensor_velocity of this ISD200.
-        :type sensor_velocity: XYZ
-        """
-
-        self._sensor_velocity = sensor_velocity
-
-    @property
-    def sun_position(self) -> XYZ:
+    def sun_position(self) -> ISD200SunPosition:
         """Gets the sun_position of this ISD200.
 
 
         :return: The sun_position of this ISD200.
-        :rtype: XYZ
+        :rtype: ISD200SunPosition
         """
         return self._sun_position
 
     @sun_position.setter
-    def sun_position(self, sun_position: XYZ):
+    def sun_position(self, sun_position: ISD200SunPosition):
         """Sets the sun_position of this ISD200.
 
 
         :param sun_position: The sun_position of this ISD200.
-        :type sun_position: XYZ
+        :type sun_position: ISD200SunPosition
         """
 
         self._sun_position = sun_position
-
-    @property
-    def sun_velocity(self) -> XYZ:
-        """Gets the sun_velocity of this ISD200.
-
-
-        :return: The sun_velocity of this ISD200.
-        :rtype: XYZ
-        """
-        return self._sun_velocity
-
-    @sun_velocity.setter
-    def sun_velocity(self, sun_velocity: XYZ):
-        """Sets the sun_velocity of this ISD200.
-
-
-        :param sun_velocity: The sun_velocity of this ISD200.
-        :type sun_velocity: XYZ
-        """
-
-        self._sun_velocity = sun_velocity
 
     @property
     def sensor_orientation(self) -> Quaternions:

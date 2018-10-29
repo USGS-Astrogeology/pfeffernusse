@@ -15,14 +15,14 @@ class Quaternions(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, quaternions: List[List[List[float]]]=None):  # noqa: E501
+    def __init__(self, quaternions: List[List[float]]=None):  # noqa: E501
         """Quaternions - a model defined in OpenAPI
 
         :param quaternions: The quaternions of this Quaternions.  # noqa: E501
-        :type quaternions: List[List[List[float]]]
+        :type quaternions: List[List[float]]
         """
         self.openapi_types = {
-            'quaternions': List[List[List[float]]]
+            'quaternions': List[List[float]]
         }
 
         self.attribute_map = {
@@ -43,24 +43,24 @@ class Quaternions(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def quaternions(self) -> List[List[List[float]]]:
+    def quaternions(self) -> List[List[float]]:
         """Gets the quaternions of this Quaternions.
 
         Orientation of the sensor provided in quaternions  # noqa: E501
 
         :return: The quaternions of this Quaternions.
-        :rtype: List[List[List[float]]]
+        :rtype: List[List[float]]
         """
         return self._quaternions
 
     @quaternions.setter
-    def quaternions(self, quaternions: List[List[List[float]]]):
+    def quaternions(self, quaternions: List[List[float]]):
         """Sets the quaternions of this Quaternions.
 
         Orientation of the sensor provided in quaternions  # noqa: E501
 
         :param quaternions: The quaternions of this Quaternions.
-        :type quaternions: List[List[List[float]]]
+        :type quaternions: List[List[float]]
         """
         if quaternions is None:
             raise ValueError("Invalid value for `quaternions`, must not be `None`")  # noqa: E501

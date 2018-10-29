@@ -15,26 +15,15 @@ class XYZ(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, unit: str=None, locations: List[float]=None):  # noqa: E501
+    def __init__(self):  # noqa: E501
         """XYZ - a model defined in OpenAPI
 
-        :param unit: The unit of this XYZ.  # noqa: E501
-        :type unit: str
-        :param locations: The locations of this XYZ.  # noqa: E501
-        :type locations: List[float]
         """
         self.openapi_types = {
-            'unit': str,
-            'locations': List[float]
         }
 
         self.attribute_map = {
-            'unit': 'unit',
-            'locations': 'locations'
         }
-
-        self._unit = unit
-        self._locations = locations
 
     @classmethod
     def from_dict(cls, dikt) -> 'XYZ':
@@ -46,51 +35,3 @@ class XYZ(Model):
         :rtype: XYZ
         """
         return util.deserialize_model(dikt, cls)
-
-    @property
-    def unit(self) -> str:
-        """Gets the unit of this XYZ.
-
-        The unit that positions are given in, e.g., 'm'  # noqa: E501
-
-        :return: The unit of this XYZ.
-        :rtype: str
-        """
-        return self._unit
-
-    @unit.setter
-    def unit(self, unit: str):
-        """Sets the unit of this XYZ.
-
-        The unit that positions are given in, e.g., 'm'  # noqa: E501
-
-        :param unit: The unit of this XYZ.
-        :type unit: str
-        """
-        if unit is None:
-            raise ValueError("Invalid value for `unit`, must not be `None`")  # noqa: E501
-
-        self._unit = unit
-
-    @property
-    def locations(self) -> List[float]:
-        """Gets the locations of this XYZ.
-
-
-        :return: The locations of this XYZ.
-        :rtype: List[float]
-        """
-        return self._locations
-
-    @locations.setter
-    def locations(self, locations: List[float]):
-        """Sets the locations of this XYZ.
-
-
-        :param locations: The locations of this XYZ.
-        :type locations: List[float]
-        """
-        if locations is None:
-            raise ValueError("Invalid value for `locations`, must not be `None`")  # noqa: E501
-
-        self._locations = locations

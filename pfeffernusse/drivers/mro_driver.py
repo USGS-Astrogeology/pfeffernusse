@@ -15,7 +15,7 @@ class MRO_CTX(LineScanner, RadialDistortion):
     }
     
     @property
-    def model_name(self):
+    def name_model(self):
         return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
 
     @property
@@ -31,7 +31,6 @@ class MRO_CTX(LineScanner, RadialDistortion):
 
     @property
     def instrument_id(self):
-        
         return self.id_lookup[self.label['INSTRUMENT_NAME']]
     
     @property

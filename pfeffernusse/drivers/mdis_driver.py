@@ -37,7 +37,7 @@ class Messenger(Framer, TransverseDistortion):
     def focal_length(self):
         """
         """
-        coeffs = spice.gdpool('INS{}_FL_TEMP_COEFFS '.format(self.ikid), 0, 6)
+        coeffs = spice.gdpool('INS{}_FL_TEMP_COEFFS '.format(self.fikid), 0, 5)
 
         # reverse coeffs, mdis coeffs are listed a_0, a_1, a_2 ... a_n where
         # numpy wants them a_n, a_n-1, a_n-2 ... a_0
@@ -46,8 +46,12 @@ class Messenger(Framer, TransverseDistortion):
         # eval at the focal_plane_tempature
         return f_t(self.label['FOCAL_PLANE_TEMPERATURE'].value)
 
+    @property 
+    def focal_epsilon(self):
+        return float(spice.gdpool('INS{}_FL_UNCERTAINTY'.format(self.ikid), 0, 1)[0])
+
     @property
-    def model_name(self):
+    def name_model(self):
         return "USGS_ASTRO_FRAME_SENSOR_MODEL"
 
     @property

@@ -24,3 +24,5 @@
 
 # Change made to use __extra__ instead of __origin__ for PY3.7
 pfeffernusse/util.py
+pfeffernusse/controllers/default_controller.py
+pfeffernusse/__main__.py

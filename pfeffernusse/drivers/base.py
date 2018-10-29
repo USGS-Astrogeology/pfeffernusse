@@ -68,28 +68,31 @@ class Base(ABC):
                                                'y':data['odty']}}
         data['optical_distortion'] = distortion_object
 
+        data['focal_length_model'] = {'focal_length': data['focal_length']}
+        if hasattr(self, 'focal_epsilon'):
+            data['focal_length_model']['focal_epsilon'] = data['focal_epsilon']
+
         data['reference_height'] = {'minheight': data['reference_height'][0],
                                     'maxheight': data['reference_height'][1],
                                     'unit': 'm'}
-
+                                    
         data['sensor_position'] = {'unit':'m',
-                                   'locations':data['sensor_position']}
+                                   'velocities': data['sensor_velocity'],
+                                   'positions': data['sensor_position']}
 
-        data['sensor_orientation'] = {'quaternions':[data['sensor_orientation']]}
+        data['sun_position'] = {'unit': 'm',
+                                'positions': data['sun_position'],
+                                'velocities': data['sun_velocity']}
+
+        data['sensor_orientation'] = {'quaternions':data['sensor_orientation']}
         
-        data['sensor_velocity'] = {'unit':'m',
-                                   'velocities': [data['sensor_velocity']]}
         
         data['radii'] = {'semimajor':data['semimajor'],
                          'semiminor':data['semiminor'],
-                         'unit': 'm'}
-        
-        data['sun_position'] = {'unit': 'm',
-                                'locations': data['sun_position']}
-        
-        data['sun_velocity'] = {'unit':'m',
-                                'velocities': data['sun_velocity']}
-
+                         'unit': 'km'}
+  
+        data['name_platform'] = data['spacecraft_name']
+        data['name_sensor'] = data['instrument_id']
         return ISD200.from_dict(data)
     
     def _compute_ephemerides(self):
@@ -168,9 +171,21 @@ class Base(ABC):
         return self.label['EXPOSURE_DURATION'].value * 0.001  # Scale to seconds
 
     @property
+    def spacecraft_clock_stop_count(self):
+        sc = self.label.get('SPACECRAFT_CLOCK_STOP_COUNT', None)
+        if sc == 'N/A':
+            sc = None
+        return sc
+
+    @property
     def ending_ephemeris_time(self):
         if not hasattr(self, '_ending_ephemeris_time'):
-            self._ending_ephemeris_time = spice.scs2e(self.spacecraft_id, self.label['SPACECRAFT_CLOCK_STOP_COUNT']) + (self._exposure_duration / 2.0)
+            if self.spacecraft_clock_stop_count:
+                self._ending_ephemeris_time = spice.scs2e(self.spacecraft_id,
+                                                            self.label['SPACECRAFT_CLOCK_STOP_COUNT']) +\
+                                                            (self._exposure_duration / 2.0)
+            else:
+                self._ending_ephemeris_time = None
         return self._ending_ephemeris_time
 
     @property
@@ -192,28 +207,31 @@ class Base(ABC):
         return spice.bods2c(self.instrument_id)
 
     @property
+    def fikid(self):
+        fn = self.label.get('FILTER_NUMBER', 0)
+        if fn == 'N/A':
+            fn = 0
+        return self.ikid - int(fn)
+
+    @property
     def spacecraft_id(self):
         return spice.bods2c(self.spacecraft_name)
 
     @property 
     def focal2pixel_lines(self):
-        f2pl = spice.gdpool('INS{}_TRANSY'.format(self.ikid), 0, 3)
+        return spice.gdpool('INS{}_ITRANSL'.format(self.fikid), 0, 3)
         func = np.vectorize(lambda x: 1/x if x != 0 else x)
         return func(f2pl)
     
     @property 
     def focal2pixel_samples(self):
-        f2ps = spice.gdpool('INS{}_TRANSX'.format(self.ikid), 0, 3)
+        return spice.gdpool('INS{}_ITRANSS'.format(self.fikid), 0, 3)
         func = np.vectorize(lambda x: 1/x if x != 0 else x)
         return func(f2ps)
         
     @property 
     def focal_length(self):
         return float(spice.gdpool('INS{}_FOCAL_LENGTH'.format(self.ikid), 0, 1)[0])
-            
-    @property 
-    def focal_length_epsilon(self):
-        return float(spice.gdpool('INS{}_FL_UNCERTAINTY'.format(self.ikid), 0, 1)[0])
 
     @property
     def starting_detector_line(self):
@@ -253,7 +271,7 @@ class Base(ABC):
                                      'NONE',
                                      self.label['TARGET_NAME'])
 
-        return sun_state[:4].tolist()
+        return [sun_state[:4].tolist()]
 
     @property
     def sun_velocity(self):
@@ -263,7 +281,7 @@ class Base(ABC):
                                      'NONE',
                                      self.label['TARGET_NAME'])
 
-        return sun_state[3:6].tolist()
+        return [sun_state[3:6].tolist()]
     
     @property
     def sensor_position(self):
@@ -279,7 +297,7 @@ class Base(ABC):
 
     @property
     def sensor_orientation(self):
-        if not hasattr(self, '_sensororientation'):
+        if not hasattr(self, '_sensor_orientation'):
             current_et = self.starting_ephemeris_time
             qua = np.empty((self.number_of_ephemerides, 4))
             for i in range(self.number_of_quaternions):

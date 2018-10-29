@@ -15,31 +15,31 @@ class ISD200Radii(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, semimajor: float=None, semiminor: float=None, units: str=None):  # noqa: E501
+    def __init__(self, semimajor: float=None, semiminor: float=None, unit: str=None):  # noqa: E501
         """ISD200Radii - a model defined in OpenAPI
 
         :param semimajor: The semimajor of this ISD200Radii.  # noqa: E501
         :type semimajor: float
         :param semiminor: The semiminor of this ISD200Radii.  # noqa: E501
         :type semiminor: float
-        :param units: The units of this ISD200Radii.  # noqa: E501
-        :type units: str
+        :param unit: The unit of this ISD200Radii.  # noqa: E501
+        :type unit: str
         """
         self.openapi_types = {
             'semimajor': float,
             'semiminor': float,
-            'units': str
+            'unit': str
         }
 
         self.attribute_map = {
             'semimajor': 'semimajor',
             'semiminor': 'semiminor',
-            'units': 'units'
+            'unit': 'unit'
         }
 
         self._semimajor = semimajor
         self._semiminor = semiminor
-        self._units = units
+        self._unit = unit
 
     @classmethod
     def from_dict(cls, dikt) -> 'ISD200Radii':
@@ -97,22 +97,24 @@ class ISD200Radii(Model):
         self._semiminor = semiminor
 
     @property
-    def units(self) -> str:
-        """Gets the units of this ISD200Radii.
+    def unit(self) -> str:
+        """Gets the unit of this ISD200Radii.
 
 
-        :return: The units of this ISD200Radii.
+        :return: The unit of this ISD200Radii.
         :rtype: str
         """
-        return self._units
+        return self._unit
 
-    @units.setter
-    def units(self, units: str):
-        """Sets the units of this ISD200Radii.
+    @unit.setter
+    def unit(self, unit: str):
+        """Sets the unit of this ISD200Radii.
 
 
-        :param units: The units of this ISD200Radii.
-        :type units: str
+        :param unit: The unit of this ISD200Radii.
+        :type unit: str
         """
+        if unit is None:
+            raise ValueError("Invalid value for `unit`, must not be `None`")  # noqa: E501
 
-        self._units = units
+        self._unit = unit
