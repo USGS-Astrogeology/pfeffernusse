@@ -1,0 +1,433 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: jlaura@usgs.gov
+  description: A SpiceAPI for extracting NAIF Spice Data
+  license:
+    name: UnLicense
+    url: http://unlicense.org/
+  title: Pfeffernusse
+  version: 0.1.2
+servers:
+- url: http://localhost:8080/v1
+paths:
+  /pds/:
+    get:
+      description: Adds an item to the system
+      operationId: create_isd
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/request_ISD'
+        required: true
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ISD200'
+          description: Successful Label Translation
+        400:
+          content: {}
+          description: invalid input, object invalid
+      summary: Converts Image Labels to ISDs
+      x-swagger-router-controller: pfeffernusse.controllers.default_controller
+      x-openapi-router-controller: pfeffernusse.controllers.default_controller
+  /metalkernels/:
+    get:
+      operationId: get_metakernel
+      parameters:
+      - in: query
+        name: mission
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: year
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: version
+        required: true
+        schema:
+          default: latest
+          type: string
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/data'
+          description: Successful Kernel Search
+        400:
+          content: {}
+          description: invalid input, object invalid
+      summary: Get a specific kernel
+      x-swagger-router-controller: pfeffernusse.controllers.default_controller
+      x-openapi-router-controller: pfeffernusse.controllers.default_controller
+  /metakernels/catalog/:
+    get:
+      description: Get Available Products and Related Metadata
+      operationId: metakernel_catalog
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/data'
+          description: Successful Catalog Search
+        400:
+          content: {}
+          description: invalid input, object invalid
+      summary: Access Product Information
+      x-swagger-router-controller: pfeffernusse.controllers.default_controller
+      x-openapi-router-controller: pfeffernusse.controllers.default_controller
+components:
+  schemas:
+    ISD200_reference_height:
+      description: Used for determining the intersection of the look vector with the ellipsoid, measured in meters
+      example: '{"minheight":100,"maxheight":1000,"unit":"m"}'
+      properties:
+        minheight:
+          type: number
+        maxheight:
+          type: number
+        unit:
+          description: The unit that heights are provided in
+          type: string
+      required:
+      - maxheight
+      - minheight
+      - unit
+      type: object
+    optical_distortion:
+      example:
+        radial:
+          coefficients:
+          - 3.616076749251911
+          - 3.616076749251911
+        transverse:
+          y:
+          - 9.301444243932576
+          - 9.301444243932576
+          x:
+          - 7.061401241503109
+          - 7.061401241503109
+      properties:
+        transverse:
+          $ref: '#/components/schemas/optical_distortion_transverse'
+        radial:
+          $ref: '#/components/schemas/optical_distortion_radial'
+      type: object
+    Quaternions:
+      properties:
+        quaternions:
+          description: Orientation of the sensor provided in quaternions
+          items:
+            items:
+              items:
+                description: The four element vector quaternion
+                type: number
+              type: array
+            type: array
+          type: array
+      required:
+      - quaternions
+      type: object
+    data:
+      description: Generic data object
+      example:
+        count: 0
+        data:
+        - '{}'
+        - '{}'
+      properties:
+        count:
+          type: integer
+        data:
+          items:
+            properties: {}
+            type: object
+          type: array
+      type: object
+    optical_distortion_transverse:
+      example:
+        y:
+        - 9.301444243932576
+        - 9.301444243932576
+        x:
+        - 7.061401241503109
+        - 7.061401241503109
+      properties:
+        x:
+          items:
+            type: number
+          type: array
+        y:
+          items:
+            type: number
+          type: array
+      type: object
+    XYZ:
+      description: An object to hold the x,y,z position or velocity of an object in meters
+      example:
+        z: 6.84685269835264
+        y: 1.4894159098541704
+        x: 1.0246457001441578
+      properties:
+        unit:
+          description: The unit that positions are given in, e.g., 'm'
+          type: string
+        locations:
+          items:
+            type: number
+          type: array
+      required:
+      - locations
+      - unit
+      title: XYZ Position or Velocity
+      type: object
+    ISD200_focal_length_model:
+      description: The static focal length or the information needed to model a variable focal length
+      example:
+        focal_epsilon: 5.962133916683182
+        focal_length: 1.4658129805029452
+        key: key
+      properties:
+        key:
+          description: A key to get information about time/temp dependent focal length models
+          type: string
+        focal_length:
+          description: The focal length in mm
+          type: number
+        focal_epsilon:
+          description: The uncertainty of the focal length in mm
+          type: number
+      required:
+      - focal_length
+      type: object
+    request_ISD:
+      properties:
+        label:
+          format: uuid
+          type: string
+      type: object
+    ISD200:
+      description: The Instrument Specification Definition for Astro CSM
+      example:
+        sensor_velocity:
+        - z: 6.84685269835264
+          y: 1.4894159098541704
+          x: 1.0246457001441578
+        - z: 6.84685269835264
+          y: 1.4894159098541704
+          x: 1.0246457001441578
+        focal2pixel_lines:
+        - 1.2315135367772556
+        - 1.2315135367772556
+        optical_distortion:
+          radial:
+            coefficients:
+            - 3.616076749251911
+            - 3.616076749251911
+          transverse:
+            y:
+            - 9.301444243932576
+            - 9.301444243932576
+            x:
+            - 7.061401241503109
+            - 7.061401241503109
+        dt_quaternion: 8.762042012749001
+        focal_length_model:
+          focal_epsilon: 5.962133916683182
+          focal_length: 1.4658129805029452
+          key: key
+        image_samples: 2.3021358869347655
+        number_of_quaternions: 9.965781217890562
+        detector_center: '{"line":100,"sample":100.5}'
+        number_of_ephemerides: 5.025004791520295
+        image_lines: 5.637376656633329
+        starting_detector_sample: 2.027123023002322
+        sensor_orientation:
+        - ""
+        - ""
+        sun_velocity:
+        - z: 6.84685269835264
+          y: 1.4894159098541704
+          x: 1.0246457001441578
+        - z: 6.84685269835264
+          y: 1.4894159098541704
+          x: 1.0246457001441578
+        detector_line_summing: 4.965218492984954
+        apply_light_time_correction: true
+        t0_quaternion: 9.018348186070783
+        detector_sample_summing: 1.1730742509559433
+        reference_height: '{"minheight":100,"maxheight":1000}'
+        center_ephemeris_time: 0.8008281904610115
+        sensor_location:
+        - z: 6.84685269835264
+          y: 1.4894159098541704
+          x: 1.0246457001441578
+        - z: 6.84685269835264
+          y: 1.4894159098541704
+          x: 1.0246457001441578
+        sun_position:
+        - z: 6.84685269835264
+          y: 1.4894159098541704
+          x: 1.0246457001441578
+        - z: 6.84685269835264
+          y: 1.4894159098541704
+          x: 1.0246457001441578
+        line_scan_rate:
+        - - 7.457744773683766
+          - 7.457744773683766
+        - - 7.457744773683766
+          - 7.457744773683766
+        focal2pixel_samples:
+        - 7.386281948385884
+        - 7.386281948385884
+        t0_ephemeris: 6.683562403749608
+        dt_ephemeris: 9.369310271410669
+        interpolation_method: lagrange
+        starting_detector_line: 4.145608029883936
+        radii: '{"semimajor":339600.2,"semiminor":337600.2,"units":"meters"}'
+        starting_ephemeris_time: 6.027456183070403
+      properties:
+        detector_center:
+          $ref: '#/components/schemas/ISD200_detector_center'
+        center_ephemeris_time:
+          description: The center ephemeris time of the image
+          type: number
+        model_name:
+          description: The name of the model to be instantiated
+          type: string
+        starting_ephemeris_time:
+          description: The starting ephemeris time of the image
+          type: number
+        focal_length_model:
+          $ref: '#/components/schemas/ISD200_focal_length_model'
+        image_lines:
+          description: The number of lines in the image
+          type: number
+        image_samples:
+          description: The the number of samples in the image
+          type: number
+        radii:
+          $ref: '#/components/schemas/ISD200_radii'
+        optical_distortion:
+          $ref: '#/components/schemas/optical_distortion'
+        starting_detector_sample:
+          description: The sample on the detector where the data starts
+          type: number
+        starting_detector_line:
+          description: The line on the detector where the data starts
+          type: number
+        focal2pixel_samples:
+          description: Transformation x coefficients from focal plane (mm) to detector pixel coordinates
+          items:
+            type: number
+          type: array
+        focal2pixel_lines:
+          description: Transformation y coefficients from focal plane (mm) to detector pixel coordinates
+          items:
+            type: number
+          type: array
+        sensor_location:
+          $ref: '#/components/schemas/XYZ'
+        sensor_velocity:
+          $ref: '#/components/schemas/XYZ'
+        sun_position:
+          $ref: '#/components/schemas/XYZ'
+        sun_velocity:
+          $ref: '#/components/schemas/XYZ'
+        sensor_orientation:
+          $ref: '#/components/schemas/Quaternions'
+        line_scan_rate:
+          description: The line rates of the detector map with the associated start line and time
+          items:
+            items:
+              description: The (start_line, line_start_time, exposure_time). The exposure time is in seconds and any non - provided values will be set to - 1.
+              type: number
+            type: array
+          type: array
+        detector_sample_summing:
+          description: 'The summing in the sample-direction. A summing of 1 indicates
+            no summing, summing of 2 indicates 2 pixel summing,4 indicates 4 pixel
+            summing, etc '
+          type: number
+        detector_line_summing:
+          description: The summing in the line-direction
+          type: number
+        dt_ephemeris:
+          description: The time between each ephemeris point.
+          type: number
+        t0_ephemeris:
+          description: First ephemeris time - center image time
+          type: number
+        dt_quaternion:
+          description: Time spacing of quaternions.
+          type: number
+        t0_quaternion:
+          description: First quaternion time - center image time.
+          type: number
+        reference_height:
+          $ref: '#/components/schemas/ISD200_reference_height'
+        interpolation_method:
+          description: The type of interpolation method to use.
+          enum:
+          - lagrange
+          type: string
+      required:
+      - focal2pixel_lines
+      - focal2pixel_samples
+      - focal_length_model
+      - image_lines
+      - image_samples
+      - model_name
+      - radii
+      - reference_height
+      - sensor_orientation
+      - starting_detector_line
+      - starting_detector_sample
+      - starting_ephemeris_time
+      title: Instrument Specification Definition
+      type: object
+    optical_distortion_radial:
+      example:
+        coefficients:
+        - 3.616076749251911
+        - 3.616076749251911
+      properties:
+        coefficients:
+          items:
+            description: Each coefficient used for the distortion equation in order of increasing degrees.
+            type: number
+          type: array
+      type: object
+    ISD200_detector_center:
+      description: Center of the detector in pixel coordinates (line, sample)
+      example: '{"line":100,"sample":100.5}'
+      properties:
+        line:
+          type: number
+        sample:
+          type: number
+      required:
+      - line
+      - sample
+      type: object
+    ISD200_radii:
+      description: The radii of the target in meters.
+      example: '{"semimajor":339600.2,"semiminor":337600.2,"units":"meters"}'
+      properties:
+        semimajor:
+          type: number
+        semiminor:
+          type: number
+        units:
+          type: string
+      required:
+      - semimajor
+      type: object

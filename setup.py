@@ -21,7 +21,7 @@ setup(
     description="Pfeffernusse",
     author_email="jlaura@usgs.gov",
     url="",
-    keywords=["Swagger", "Pfeffernusse"],
+    keywords=["OpenAPI", "Pfeffernusse"],
     install_requires=REQUIRES,
     packages=find_packages(),
     package_data={'': ['swagger/swagger.yaml']},
