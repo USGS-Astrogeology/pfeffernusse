@@ -48,25 +48,24 @@ class Base(ABC):
             return False
 
     def to_dict(self):
-        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__')}
+        return {p:getattr(self, p) for p in dir(self) if not p.startswith('__') or p.startswith('_')}
 
     def to_pfeffer_response(self):
         """
         Parse the data into a valid pfeffernusse response
         """
         data = self.to_dict()
-
         # Take the flat reponse and create the pfeffernusse obj dicts
         data['detector_center'] = {'line': data['detector_center'][0],
                                 'sample': data['detector_center'][1]}
 
         # Parse the distortion object out of the 
+      
         if isinstance(self, distortion.RadialDistortion):
-            distortion_object = {'radial':{'coefficients':data['odtk']}}
+            data['optical_distortion'] = {'radial':{'coefficients':data['odtk']}}
         elif isinstance(self, distortion.TransverseDistortion):
-            distortion_object = {'transverse':{'x':data['odtx'],
-                                               'y':data['odty']}}
-        data['optical_distortion'] = distortion_object
+            data['optical_distortion'] = {'transverse':{'x':data['odtx'],
+                                                        'y':data['odty']}}
 
         data['focal_length_model'] = {'focal_length': data['focal_length']}
         if hasattr(self, 'focal_epsilon'):
@@ -83,9 +82,8 @@ class Base(ABC):
         data['sun_position'] = {'unit': 'm',
                                 'positions': data['sun_position'],
                                 'velocities': data['sun_velocity']}
-
-        data['sensor_orientation'] = {'quaternions':data['sensor_orientation']}
         
+        data['sensor_orientation'] = {'quaternions':data['sensor_orientation']}
         
         data['radii'] = {'semimajor':data['semimajor'],
                          'semiminor':data['semiminor'],
@@ -116,10 +114,9 @@ class Base(ABC):
             current_et += getattr(self, 'dt_ephemeris', 0)
         eph *= -1000 # Reverse to be from body center and convert to meters
         eph_rates *= -1000 # Same, reverse and convert
-
         self._sensor_velocity = eph_rates
         self._sensor_position = eph
-
+    
     @property
     @abstractmethod
     def metakernel(self):
@@ -163,6 +160,7 @@ class Base(ABC):
     def starting_ephemeris_time(self):
         if not hasattr(self, '_starting_ephemeris_time'):
             sclock = self.label['SPACECRAFT_CLOCK_START_COUNT']
+            print(self.spacecraft_id, sclock)
             self._starting_ephemeris_time = spice.scs2e(self.spacecraft_id, sclock)
         return self._starting_ephemeris_time
     
@@ -220,14 +218,10 @@ class Base(ABC):
     @property 
     def focal2pixel_lines(self):
         return spice.gdpool('INS{}_ITRANSL'.format(self.fikid), 0, 3)
-        func = np.vectorize(lambda x: 1/x if x != 0 else x)
-        return func(f2pl)
     
     @property 
     def focal2pixel_samples(self):
         return spice.gdpool('INS{}_ITRANSS'.format(self.fikid), 0, 3)
-        func = np.vectorize(lambda x: 1/x if x != 0 else x)
-        return func(f2ps)
         
     @property 
     def focal_length(self):
@@ -327,7 +321,7 @@ class LineScanner(Base):
         In the form: [start_line, line_time, exposure_duration]
         The form below is for a fixed rate line scanner.
         """
-        return [self.starting_detector_line, self.start_time, self._scan_duration]
+        return [[float(self.starting_detector_line), self.starting_ephemeris_time, self._scan_duration]]
 
     @property
     def detector_center(self):
@@ -358,19 +352,19 @@ class LineScanner(Base):
 
     @property
     def dt_ephemeris(self):
-        return 80 * self._scan_duration
+        return self.number_of_ephemerides * self._scan_duration
     
     @property
     def number_of_ephemerides(self):
-        return int(self._scan_duration / self.dt_ephemeris)
+        return 80
     
     @property 
     def number_of_quaternions(self):
-        return int(self._scan_duration / self.dt_quaternion)
+        return int(self.dt_quaternion / self._scan_duration)
 
     @property
     def dt_quaternion(self):
-        return 80 * self._scan_duration
+        return self.number_of_ephemerides * self._scan_duration
 
 class Framer(Base):
     

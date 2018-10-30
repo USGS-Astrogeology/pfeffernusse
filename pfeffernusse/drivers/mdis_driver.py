@@ -1,7 +1,6 @@
 from glob import glob
 import os
 
-from dateutil import parser
 import pvl
 import spiceypy as spice
 import numpy as np
