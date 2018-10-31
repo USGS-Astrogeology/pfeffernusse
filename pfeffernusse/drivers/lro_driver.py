@@ -4,15 +4,12 @@ import os
 import numpy as np
 import pvl
 import spiceypy as spice
-from pfeffernusse import config
 
+from pfeffernusse.util import get_metakernels
 from pfeffernusse.drivers.base import LineScanner
 from pfeffernusse.drivers.distortion import RadialDistortion
 
-class MRO_CTX(LineScanner, RadialDistortion):
-    id_lookup = {
-            'LROC':'MRO_CTX'
-    }
+class LRO_LROC(LineScanner, RadialDistortion):
 
     @property
     def name_model(self):
@@ -20,25 +17,30 @@ class MRO_CTX(LineScanner, RadialDistortion):
 
     @property
     def metakernel(self):
-        metakernel_dir = config.mro
-        mks = sorted(glob(os.path.join(metakernel_dir,'*.tm')))
-        if not hasattr(self, '_metakernel'):
-            self._metakernel = None
-            for mk in mks:
-                if str(self.start_time.year) in os.path.basename(mk):
-                    self._metakernel = mk
+        metakernels = get_metakernels(years=self.start_time.year, missions='lro', versions='latest')
+        self._metakernel = metakernels['data'][0]['path']
         return self._metakernel
 
     @property
     def instrument_id(self):
-        return self.id_lookup[self.label['INSTRUMENT_NAME']]
+        """
+        Ignores Wide Angle for now
+        """
+
+        instrument = self.label.get("INSTRUMENT_ID")
+
+        # should be left or right
+        frame_id = self.label.get("FRAME_ID")
+
+        if instrument == "LROC" and frame_id == "LEFT":
+            return "LRO_LROCNACL"
+        elif instrument == "LROC" and frame_id == "RIGHT":
+            return "LRO_LROCNACR"
+
 
     @property
     def spacecraft_name(self):
-        name_lookup = {
-            'MARS_RECONNAISSANCE_ORBITER': 'MRO'
-        }
-        return name_lookup[self.label['SPACECRAFT_NAME']]
+        return "LRO"
 
     @property
     def reference_height(self):

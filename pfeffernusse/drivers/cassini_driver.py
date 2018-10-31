@@ -12,7 +12,7 @@ from pfeffernusse.drivers.base import Framer
 class CassiniISS(Framer):
     id_lookup = {
         "ISSNA" : "CASSINI_ISS_NAC",
-        "ISSWA" : "CASSINI_ISS_WAC"        
+        "ISSWA" : "CASSINI_ISS_WAC"
     }
 
     @property
@@ -55,7 +55,7 @@ class CassiniISS(Framer):
     @property
     def reference_height(self):
         return 0, 100
-    
+
     @property
     def _exposure_duration(self):
         return self.label['EXPOSURE_DURATION'] * 0.001  # Scale to seconds

@@ -21,10 +21,16 @@ drivers = dict(chain.from_iterable(inspect.getmembers(dmod, lambda x: inspect.is
 def load(label):
     app.logger.info("Attempting drivers: {}".format(' '.join(drivers.keys())))
     for name, driver in drivers.items():
-        res = driver(label)
-        if res.is_valid():
-            app.logger.info('Successfully loaded {}'.format(name))
-            with res as r:
-                resp = r.to_pfeffer_response()
-            return resp
+        try:
+            res = driver(label)
+            print(res.metakernel)
+            if res.is_valid():
+                app.logger.info('Successfully loaded {}'.format(name))
+                with res as r:
+                    resp = r.to_pfeffer_response()
+                return resp
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            app.logger.warning("{} failed: {}".format(name, e))
     raise Exception('No Such Driver for Label')

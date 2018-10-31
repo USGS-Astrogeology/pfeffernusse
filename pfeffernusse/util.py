@@ -1,8 +1,15 @@
 import datetime
 
+import os
 import six
 import typing
 import numpy as np
+from glob import glob
+from os import path
+from itertools import groupby, filterfalse
+from pfeffernusse import config
+
+
 
 def _deserialize(data, klass):
     """Deserializes dict, list, str into an object.
@@ -140,17 +147,13 @@ def _deserialize_dict(data, boxed_type):
             for k, v in six.iteritems(data)}
 
 
-def get_metakernels(root=os.environ.get("SPICE_DATA"), missions=set(), years=set(), versions=set()):
+def get_metakernels(spice_dir=config.spice_root, missions=set(), years=set(), versions=set()):
     """
     Given a root directory, get any subdirectory containing metakernels,
     assume spice directory structure.
 
     Mostly doing filtering here, might be worth using Pandas?
     """
-
-    spice_dir = os.environ.get("SPICE_DATA")
-    if spice_dir is None:
-        raise Exception("$SPICE_DATA not set")
 
     if isinstance(missions, str):
         missions = {missions}
