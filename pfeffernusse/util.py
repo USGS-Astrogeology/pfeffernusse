@@ -138,3 +138,69 @@ def _deserialize_dict(data, boxed_type):
     """
     return {k: _deserialize(v, boxed_type)
             for k, v in six.iteritems(data)}
+
+
+def get_metakernels(root=os.environ.get("SPICE_DATA"), missions=set(), years=set(), versions=set()):
+    """
+    Given a root directory, get any subdirectory containing metakernels,
+    assume spice directory structure.
+
+    Mostly doing filtering here, might be worth using Pandas?
+    """
+
+    spice_dir = os.environ.get("SPICE_DATA")
+    if spice_dir is None:
+        raise Exception("$SPICE_DATA not set")
+
+    if isinstance(missions, str):
+        missions = {missions}
+
+    if isinstance(years, str) or isinstance(years, int):
+        years = {str(years)}
+    else:
+        years = {str(year) for year in years}
+
+    avail = {
+        'count': 0,
+        'data': []
+    }
+
+    mission_dirs = list(filter(os.path.isdir, glob(os.path.join(spice_dir, '*'))))
+
+    for md in mission_dirs:
+        # Assuming spice root has the same name as the original on NAIF website"
+        mission = os.path.basename(md).split('-')[0]
+        if missions and mission not in missions:
+            continue
+
+        metakernel_keys = ['mission', 'year', 'version', 'path']
+
+        # recursive glob to make metakernel search more robust to subtle directory structure differences
+        metakernel_paths = sorted(glob(os.path.join(md, '**','*.tm'), recursive=True))
+
+        metakernels = [dict(zip(metakernel_keys, [mission]+path.splitext(path.basename(k))[0].split('_')[1:3] + [k])) for k in metakernel_paths]
+
+        # naive filter, do we really need anything else?
+        if years:
+            metakernels = list(filter(lambda x:x['year'] in years, metakernels))
+        if versions:
+            if versions == 'latest':
+                latest = []
+                # Panda's groupby is overrated
+                for k, g in groupby(metakernels, lambda x:x['year']):
+                    items = list(g)
+                    latest.append(max(items, key=lambda x:x['version']))
+                metakernels = latest
+            else:
+                metakernels = list(filter(lambda x:x['version'] in versions, metakernels))
+
+        avail['data'].extend(metakernels)
+
+    avail['count'] = len(avail['data'])
+    if not avail:
+        avail = {
+            'count' : 0,
+            'data' : 'ERROR: NONE OF {} ARE VALID MISSIONS'.format(missions)
+        }
+
+    return avail
