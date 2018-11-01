@@ -7,12 +7,12 @@ info:
     name: UnLicense
     url: http://unlicense.org/
   title: Pfeffernusse
-  version: 0.1.2
+  version: 0.1.4
 servers:
 - url: http://localhost:8080/v1
 paths:
   /pds/:
-    get:
+    post:
       description: Adds an item to the system
       operationId: create_isd
       requestBody:
@@ -40,17 +40,14 @@ paths:
       parameters:
       - in: query
         name: mission
-        required: true
         schema:
           type: string
       - in: query
         name: year
-        required: true
         schema:
           type: string
       - in: query
         name: version
-        required: true
         schema:
           default: latest
           type: string
@@ -121,21 +118,6 @@ components:
         radial:
           $ref: '#/components/schemas/optical_distortion_radial'
       type: object
-    Quaternions:
-      properties:
-        quaternions:
-          description: Orientation of the sensor provided in quaternions
-          items:
-            items:
-              items:
-                description: The four element vector quaternion
-                type: number
-              type: array
-            type: array
-          type: array
-      required:
-      - quaternions
-      type: object
     data:
       description: Generic data object
       example:
@@ -151,43 +133,6 @@ components:
             properties: {}
             type: object
           type: array
-      type: object
-    optical_distortion_transverse:
-      example:
-        y:
-        - 9.301444243932576
-        - 9.301444243932576
-        x:
-        - 7.061401241503109
-        - 7.061401241503109
-      properties:
-        x:
-          items:
-            type: number
-          type: array
-        y:
-          items:
-            type: number
-          type: array
-      type: object
-    XYZ:
-      description: An object to hold the x,y,z position or velocity of an object in meters
-      example:
-        z: 6.84685269835264
-        y: 1.4894159098541704
-        x: 1.0246457001441578
-      properties:
-        unit:
-          description: The unit that positions are given in, e.g., 'm'
-          type: string
-        locations:
-          items:
-            type: number
-          type: array
-      required:
-      - locations
-      - unit
-      title: XYZ Position or Velocity
       type: object
     ISD200_focal_length_model:
       description: The static focal length or the information needed to model a variable focal length
@@ -208,10 +153,91 @@ components:
       required:
       - focal_length
       type: object
+    ISD200_detector_center:
+      description: Center of the detector in pixel coordinates (line, sample)
+      example: '{"line":100,"sample":100.5}'
+      properties:
+        line:
+          type: number
+        sample:
+          type: number
+      required:
+      - line
+      - sample
+      type: object
+    ISD200_radii:
+      description: The radii of the target in meters.
+      example: '{"semimajor":339600.2,"semiminor":337600.2,"unit":"meters"}'
+      properties:
+        semimajor:
+          type: number
+        semiminor:
+          type: number
+        unit:
+          type: string
+      required:
+      - semimajor
+      - unit
+      type: object
+    ISD200_sun_position:
+      properties:
+        velocities:
+          $ref: '#/components/schemas/XYZ'
+        unit:
+          type: string
+        positions:
+          $ref: '#/components/schemas/XYZ'
+    ISD200_sensor_position:
+      properties:
+        velocities:
+          items:
+            $ref: '#/components/schemas/XYZ'
+          type: array
+        unit:
+          type: string
+        positions:
+          items:
+            $ref: '#/components/schemas/XYZ'
+          type: array
+    Quaternions:
+      properties:
+        quaternions:
+          description: Orientation of the sensor provided in quaternions
+          items:
+            items:
+              description: The four element vector quaternion
+              type: number
+            type: array
+          type: array
+      required:
+      - quaternions
+      type: object
+    optical_distortion_transverse:
+      example:
+        y:
+        - 9.301444243932576
+        - 9.301444243932576
+        x:
+        - 7.061401241503109
+        - 7.061401241503109
+      properties:
+        x:
+          items:
+            type: number
+          type: array
+        y:
+          items:
+            type: number
+          type: array
+      type: object
+    XYZ:
+      description: The XYZ position or velocity
+      items:
+        type: number
+      type: array
     request_ISD:
       properties:
         label:
-          format: uuid
           type: string
       type: object
     ISD200:
@@ -266,7 +292,7 @@ components:
         detector_sample_summing: 1.1730742509559433
         reference_height: '{"minheight":100,"maxheight":1000}'
         center_ephemeris_time: 0.8008281904610115
-        sensor_location:
+        sensor_position:
         - z: 6.84685269835264
           y: 1.4894159098541704
           x: 1.0246457001441578
@@ -292,15 +318,21 @@ components:
         dt_ephemeris: 9.369310271410669
         interpolation_method: lagrange
         starting_detector_line: 4.145608029883936
-        radii: '{"semimajor":339600.2,"semiminor":337600.2,"units":"meters"}'
+        radii: '{"semimajor":339600.2,"semiminor":337600.2,"unit":"meters"}'
         starting_ephemeris_time: 6.027456183070403
       properties:
+        name_platform:
+          description: The name of the sensor platform, e.g., the spacecraft.
+          type: string
+        name_sensor:
+          description: The name of the sensor, e.g., MSGR_MDIS_NAC.
+          type: string
         detector_center:
           $ref: '#/components/schemas/ISD200_detector_center'
         center_ephemeris_time:
           description: The center ephemeris time of the image
           type: number
-        model_name:
+        name_model:
           description: The name of the model to be instantiated
           type: string
         starting_ephemeris_time:
@@ -334,14 +366,10 @@ components:
           items:
             type: number
           type: array
-        sensor_location:
-          $ref: '#/components/schemas/XYZ'
-        sensor_velocity:
-          $ref: '#/components/schemas/XYZ'
+        sensor_position:
+          $ref: '#/components/schemas/ISD200_sensor_position'
         sun_position:
-          $ref: '#/components/schemas/XYZ'
-        sun_velocity:
-          $ref: '#/components/schemas/XYZ'
+          $ref: '#/components/schemas/ISD200_sun_position'
         sensor_orientation:
           $ref: '#/components/schemas/Quaternions'
         line_scan_rate:
@@ -385,7 +413,9 @@ components:
       - focal_length_model
       - image_lines
       - image_samples
-      - model_name
+      - name_model
+      - name_platform
+      - name_sensor
       - radii
       - reference_height
       - sensor_orientation
@@ -405,29 +435,4 @@ components:
             description: Each coefficient used for the distortion equation in order of increasing degrees.
             type: number
           type: array
-      type: object
-    ISD200_detector_center:
-      description: Center of the detector in pixel coordinates (line, sample)
-      example: '{"line":100,"sample":100.5}'
-      properties:
-        line:
-          type: number
-        sample:
-          type: number
-      required:
-      - line
-      - sample
-      type: object
-    ISD200_radii:
-      description: The radii of the target in meters.
-      example: '{"semimajor":339600.2,"semiminor":337600.2,"units":"meters"}'
-      properties:
-        semimajor:
-          type: number
-        semiminor:
-          type: number
-        units:
-          type: string
-      required:
-      - semimajor
       type: object
