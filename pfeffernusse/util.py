@@ -154,12 +154,11 @@ def get_metakernels(spice_dir=config.spice_root, missions=set(), years=set(), ve
 
     Mostly doing filtering here, might be worth using Pandas?
     """
-    if not missions:
+    if not missions or missions == "all":
         missions = set()
-    if not years:
-        print("no year")
+    if not years or years == "all":
         years = set()
-    if not versions:
+    if not versions or versions == "all":
         versions = set()
 
     if isinstance(missions, str):
