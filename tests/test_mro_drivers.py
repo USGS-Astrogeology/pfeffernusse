@@ -67,8 +67,8 @@ def test_get_dict(mroctx_label):
         d = m.to_dict()
     assert isinstance(d, dict)
 
-def test_mdis_as_pfeffer_isd(mdislabel):
-    with MRO_CTX(mdislabel) as m:
+def test_mdis_as_pfeffer_isd(mroctx_label):
+    with MRO_CTX(mroctx_label) as m:
         isd = m.to_pfeffer_response()
     # TODO: Need better tests here
     assert isinstance(isd, ISD200)

@@ -7,13 +7,13 @@ class SimpleSpice():
     def bods2c(self, x):
         return -12345
     def gdpool(self, key, x, length):
-        return np.ones(length).tolist()
+        return np.ones(length)
     def bodvrd(self, key, x, length):
-        return (3, np.ones(length,).tolist())
+        return (3, np.ones(length,))
     def spkpos(self, *args):
-        return (np.ones(3).tolist(), None)
+        return (np.ones(3), None)
     def spkezr(self, *args):
-        return (np.ones(6).tolist(), None)
+        return (np.ones(6), None)
     def furnsh(self, *args):
         return
     def unload(self, *args):
@@ -21,4 +21,6 @@ class SimpleSpice():
     def pxform(self, *args):
         return
     def m2q(self, *args):
-        return [1,2,3,4]
+        return np.asarray([1,2,3,4])
+    def bodn2c(self, *args):
+        return "SPACE"

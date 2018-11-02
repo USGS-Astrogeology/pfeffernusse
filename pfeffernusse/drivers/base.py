@@ -5,8 +5,6 @@ import numpy as np
 import pvl
 import spiceypy as spice
 
-from flask import current_app as app
-
 from pfeffernusse.drivers import distortion
 from pfeffernusse.models.isd200 import ISD200
 
@@ -29,11 +27,8 @@ class Base(ABC):
         Called when the context is created. This is used
         to get the kernels furnished.
         """
-        app.logger.info("Furnishing {}".format(self.metakernel))
-
         if self.metakernel:
             spice.furnsh(self.metakernel)
-            app.logger.info("Successfully furnished {}".format(self.metakernel))
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
