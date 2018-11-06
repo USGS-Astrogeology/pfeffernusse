@@ -309,7 +309,16 @@ class Base(ABC):
             self._sensor_orientation = qua
         return self._sensor_orientation.tolist()
 
+    @property
+    def reference_height(self):
+        # TODO: This should be a reasonable #
+        return 0, 100
+
 class LineScanner(Base):
+
+    @property
+    def name_model(self):
+        return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
 
     @property
     def _scan_duration(self):
@@ -369,8 +378,16 @@ class LineScanner(Base):
     def dt_quaternion(self):
         return self.number_of_ephemerides * self._scan_duration
 
+    @property
+    def _exposure_duration(self):
+        return self.label['LINE_EXPOSURE_DURATION'].value * 0.001  # Scale to seconds
+
 class Framer(Base):
 
+    @property
+    def name_model(self):
+        return "USGS_ASTRO_FRAME_SENSOR_MODEL"
+        
     @property
     def number_of_ephemerides(self):
         return 1

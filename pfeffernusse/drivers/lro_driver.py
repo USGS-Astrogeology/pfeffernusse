@@ -12,10 +12,6 @@ from pfeffernusse.drivers.distortion import RadialDistortion
 class LRO_LROC(LineScanner, RadialDistortion):
 
     @property
-    def name_model(self):
-        return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
-
-    @property
     def metakernel(self):
         metakernels = get_metakernels(years=self.start_time.year, missions='lro', versions='latest')
         self._metakernel = metakernels['data'][0]['path']
@@ -37,16 +33,7 @@ class LRO_LROC(LineScanner, RadialDistortion):
         elif instrument == "LROC" and frame_id == "RIGHT":
             return "LRO_LROCNACR"
 
-
     @property
     def spacecraft_name(self):
         return "LRO"
 
-    @property
-    def reference_height(self):
-        # TODO: This should be a reasonable #
-        return 0, 100
-
-    @property
-    def _exposure_duration(self):
-        return self.label['LINE_EXPOSURE_DURATION'].value * 0.001  # Scale to seconds
