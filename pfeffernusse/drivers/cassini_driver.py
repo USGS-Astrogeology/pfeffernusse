@@ -7,9 +7,10 @@ import numpy as np
 
 from pfeffernusse import config
 from pfeffernusse.drivers.base import Framer
+from pfeffernusse.drivers.distortion import RadialDistortion
 
 
-class CassiniISS(Framer):
+class CassiniISS(Framer, RadialDistortion):
     id_lookup = {
         "ISSNA" : "CASSINI_ISS_NAC",
         "ISSWA" : "CASSINI_ISS_WAC"
@@ -49,13 +50,21 @@ class CassiniISS(Framer):
         return [0.0, 0.0, 1/pixel_size]
 
     @property
-    def name_model(self):
-        return "USGS_ASTRO_FRAME_SENSOR_MODEL"
-
-    @property
-    def reference_height(self):
-        return 0, 100
-
-    @property
     def _exposure_duration(self):
+        # labels do not specify a unit explicitly
         return self.label['EXPOSURE_DURATION'] * 0.001  # Scale to seconds
+
+    @property
+    def odtk(self):
+        """
+        The radial distortion coeffs are not defined in the ik kernels, instead
+        they are defined in the ISS Data User Guide (Knowles). Therefore, we
+        manually specify the codes here.
+        """
+        if self.instrument_id == 'CASSINI_ISS_WAC':
+            # WAC
+            return [float('-6.2e-5'), 0, 0]
+        elif self.instrument_id == 'CASSINI_ISS_NAC':
+            # NAC
+            return [float('-8e-6'), 0, 0]
+        
