@@ -308,7 +308,6 @@ class Base(ABC):
         # TODO: This should be a reasonable #
         return 0, 100
 
-
 class LineScanner(Base):
 
     @property
@@ -372,12 +371,16 @@ class LineScanner(Base):
 
 
 
+    @property
+    def _exposure_duration(self):
+        return self.label['LINE_EXPOSURE_DURATION'].value * 0.001  # Scale to seconds
+
 class Framer(Base):
 
     @property
     def name_model(self):
         return "USGS_ASTRO_FRAME_SENSOR_MODEL"
-
+        
     @property
     def number_of_ephemerides(self):
         return 1

@@ -49,8 +49,6 @@ class Messenger(Framer, TransverseDistortion):
     def focal_epsilon(self):
         return float(spice.gdpool('INS{}_FL_UNCERTAINTY'.format(self.ikid), 0, 1)[0])
 
-
-
     @property
     def starting_detector_sample(self):
         return int(spice.gdpool('INS{}_FPUBIN_START_SAMPLE'.format(self.ikid), 0, 1)[0])
