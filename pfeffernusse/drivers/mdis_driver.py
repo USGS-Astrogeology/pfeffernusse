@@ -50,15 +50,6 @@ class Messenger(Framer, TransverseDistortion):
         return float(spice.gdpool('INS{}_FL_UNCERTAINTY'.format(self.ikid), 0, 1)[0])
 
     @property
-    def name_model(self):
-        return "USGS_ASTRO_FRAME_SENSOR_MODEL"
-
-    @property
-    def reference_height(self):
-        # TODO: This should be a reasonable #
-        return 0, 100
-
-    @property
     def starting_detector_sample(self):
         return int(spice.gdpool('INS{}_FPUBIN_START_SAMPLE'.format(self.ikid), 0, 1)[0])
     

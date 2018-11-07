@@ -13,10 +13,6 @@ class MRO_CTX(LineScanner, RadialDistortion):
     id_lookup = {
             'CONTEXT CAMERA':'MRO_CTX'
     }
-    
-    @property
-    def name_model(self):
-        return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
 
     @property
     def metakernel(self):
@@ -39,12 +35,3 @@ class MRO_CTX(LineScanner, RadialDistortion):
             'MARS_RECONNAISSANCE_ORBITER': 'MRO'
         }
         return name_lookup[self.label['SPACECRAFT_NAME']]
-
-    @property
-    def reference_height(self):
-        # TODO: This should be a reasonable #
-        return 0, 100
-
-    @property
-    def _exposure_duration(self):
-        return self.label['LINE_EXPOSURE_DURATION'].value * 0.001  # Scale to seconds

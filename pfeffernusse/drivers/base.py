@@ -105,19 +105,20 @@ class Base(ABC):
         eph_rates = np.empty(eph.shape)
         current_et = self.starting_ephemeris_time
         for i in range(self.number_of_ephemerides):
-            state, _ = spice.spkezr(self.target_name,
+            state, _ = spice.spkezr(self.spacecraft_name,
                                     current_et,
                                     self.reference_frame,
                                     'NONE',
-                                    self.spacecraft_name) # If this is the sensor, insufficient, if this is the spacecraft, it works? Huh?
+                                    self.target_name,) # If this is the sensor, insufficient, if this is the spacecraft, it works? Huh?
             eph[i] = state[:3]
             eph_rates[i] = state[3:]
-            # Increment the time by the number of lines being stepped
             current_et += getattr(self, 'dt_ephemeris', 0)
-        eph *= -1000 # Reverse to be from body center and convert to meters
-        eph_rates *= -1000 # Same, reverse and convert
+        # By default, spice works in km
+        eph *= 1000
+        eph_rates *= 1000 
         self._sensor_velocity = eph_rates
         self._sensor_position = eph
+
 
     @property
     @abstractmethod
@@ -162,9 +163,7 @@ class Base(ABC):
     def starting_ephemeris_time(self):
         if not hasattr(self, '_starting_ephemeris_time'):
             sclock = self.label['SPACECRAFT_CLOCK_START_COUNT']
-            print(self.spacecraft_id, sclock)
             self._starting_ephemeris_time = spice.scs2e(self.spacecraft_id, sclock)
-            print()
         return self._starting_ephemeris_time
 
     @property
@@ -181,12 +180,7 @@ class Base(ABC):
     @property
     def ending_ephemeris_time(self):
         if not hasattr(self, '_ending_ephemeris_time'):
-            if self.spacecraft_clock_stop_count:
-                self._ending_ephemeris_time = spice.scs2e(self.spacecraft_id,
-                                                            self.label['SPACECRAFT_CLOCK_STOP_COUNT']) +\
-                                                            (self._exposure_duration / 2.0)
-            else:
-                self._ending_ephemeris_time = None
+            self._ending_ephemeris_time = (self.image_lines * self._exposure_duration) + self.starting_ephemeris_time
         return self._ending_ephemeris_time
 
     @property
@@ -309,14 +303,20 @@ class Base(ABC):
             self._sensor_orientation = qua
         return self._sensor_orientation.tolist()
 
+    @property
+    def reference_height(self):
+        # TODO: This should be a reasonable #
+        return 0, 100
+
 class LineScanner(Base):
 
     @property
-    def _scan_duration(self):
-        """
-        A constant duration scan rate.
-        """
-        return self.label['LINE_EXPOSURE_DURATION'][0] * 0.001
+    def name_model(self):
+        return "USGS_ASTRO_LINE_SCANNER_SENSOR_MODEL"
+
+    @property
+    def _exposure_duration(self):
+        return self.label['LINE_EXPOSURE_DURATION'].value * 0.001  # Scale to seconds
 
     @property
     def line_scan_rate(self):
@@ -324,7 +324,7 @@ class LineScanner(Base):
         In the form: [start_line, line_time, exposure_duration]
         The form below is for a fixed rate line scanner.
         """
-        return [[float(self.starting_detector_line), self.starting_ephemeris_time, self._scan_duration]]
+        return [[float(self.starting_detector_line), self.t0_ephemeris, self._exposure_duration]]
 
     @property
     def detector_center(self):
@@ -341,7 +341,7 @@ class LineScanner(Base):
         """
         if not hasattr(self, '_center_ephemeris_time'):
             halflines = self.image_lines / 2
-            center_sclock = self.starting_ephemeris_time + halflines * self._scan_duration
+            center_sclock = self.starting_ephemeris_time + halflines * self._exposure_duration
             self._center_ephemeris_time = center_sclock
         return self._center_ephemeris_time
 
@@ -355,22 +355,32 @@ class LineScanner(Base):
 
     @property
     def dt_ephemeris(self):
-        return self.number_of_ephemerides * self._scan_duration
+        return (self.ending_ephemeris_time - self.starting_ephemeris_time) / self.number_of_ephemerides
+    
+    @property
+    def dt_quaternion(self):
+        return (self.ending_ephemeris_time - self.starting_ephemeris_time) / self.number_of_ephemerides
 
     @property
     def number_of_ephemerides(self):
-        return 80
+        return 909
 
     @property
     def number_of_quaternions(self):
-        return int(self.dt_quaternion / self._scan_duration)
+        return 909
+
+
 
     @property
-    def dt_quaternion(self):
-        return self.number_of_ephemerides * self._scan_duration
+    def _exposure_duration(self):
+        return self.label['LINE_EXPOSURE_DURATION'].value * 0.001  # Scale to seconds
 
 class Framer(Base):
 
+    @property
+    def name_model(self):
+        return "USGS_ASTRO_FRAME_SENSOR_MODEL"
+        
     @property
     def number_of_ephemerides(self):
         return 1

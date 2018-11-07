@@ -23,7 +23,6 @@ def load(label):
     for name, driver in drivers.items():
         try:
             res = driver(label)
-            print(res.metakernel)
             if res.is_valid():
                 app.logger.info('Successfully loaded {}'.format(name))
                 with res as r:
