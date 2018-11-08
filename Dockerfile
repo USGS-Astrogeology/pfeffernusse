@@ -1,4 +1,4 @@
-FROM python:3-alpine
+FROM python:3
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
@@ -11,6 +11,6 @@ COPY . /usr/src/app
 
 EXPOSE 8080
 
-ENTRYPOINT ["python3"]
+ENTRYPOINT ["gunicorn"]
 
-CMD ["-m", "pfeffernusse"]
+CMD ["--bind", "0.0.0.0:8080", "pfeffernusse.wsgi"]
