@@ -17,7 +17,7 @@ paths:
       operationId: create_isd
       requestBody:
         content:
-          '*/*':
+          'application/json':
             schema:
               $ref: '#/components/schemas/request_ISD'
         required: true

@@ -26,3 +26,6 @@
 pfeffernusse/util.py
 pfeffernusse/controllers/default_controller.py
 pfeffernusse/__main__.py
+**/__init__.py
+**/__main__.py
+Dockerfile
