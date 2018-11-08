@@ -7,18 +7,22 @@ from pfeffernusse.models.request_isd import RequestISD  # noqa: E501
 from pfeffernusse import util
 from pfeffernusse import drivers
 
+from flask import current_app as app
+
 def create_isd():  # noqa: E501
     """Converts Image Labels to ISDs
 
     Adds an item to the system # noqa: E501
 
-    :param request_isd: 
+    :param request_isd:
     :type request_isd: dict | bytes
 
     :rtype: ISD200
     """
     if connexion.request.is_json:
         request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
+
+    app.logger.info("Post Request: {}".format(request_isd))
     return drivers.load(request_isd.label)
 
 def get_metakernel(mission, year, version):  # noqa: E501
@@ -26,16 +30,18 @@ def get_metakernel(mission, year, version):  # noqa: E501
 
      # noqa: E501
 
-    :param mission: 
+    :param mission:
     :type mission: str
-    :param year: 
+    :param year:
     :type year: str
-    :param version: 
+    :param version:
     :type version: str
 
     :rtype: Data
     """
-    return 'do some magic!'
+    if connexion.request.is_json:
+        request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
+    return util.get_metakernels(missions=mission, years=year, versions=version)
 
 
 def metakernel_catalog():  # noqa: E501
