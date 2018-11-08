@@ -30,7 +30,7 @@ Your OpenAPI definition lives here:
 http://localhost:8080/v1/openapi.json
 ```
 
-To run the production server, locally please execute the following from the root directory:
+To run the production server locally please execute the following from the root directory:
 ```
 pip3 install -r requirements.txt
 gunicorn --bind 0.0.0.0:8080 pfeffernusse.wsgi
