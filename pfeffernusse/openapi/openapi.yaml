@@ -9,7 +9,10 @@ info:
   title: Pfeffernusse
   version: 0.1.4
 servers:
-- url: http://localhost:8080/v1
+- url: http://localhost:58080/v1
+  description: Development server
+- url: https://pfeffer.wr.usgs.gov/v1
+  description: Production server
 paths:
   /pds/:
     post:
