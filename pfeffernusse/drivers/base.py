@@ -329,9 +329,9 @@ class LineScanner(Base):
     @property
     def detector_center(self):
         if not hasattr(self, '_detector_center'):
-            center_sample = float(spice.gdpool('INS{}_BORESIGHT_SAMPLE'.format(self.ikid), 0, 1)[0])
             center_line = float(spice.gdpool('INS{}_BORESIGHT_LINE'.format(self.ikid), 0, 1)[0])
-            self._detector_center = [center_sample, center_line]
+            center_sample = float(spice.gdpool('INS{}_BORESIGHT_SAMPLE'.format(self.ikid), 0, 1)[0])
+            self._detector_center = [center_line, center_sample]
         return self._detector_center
 
     @property
