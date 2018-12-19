@@ -262,7 +262,7 @@ class Base(ABC):
                                      'NONE',
                                      self.label['TARGET_NAME'])
 
-        return [sun_state[:4].tolist()]
+        return [sun_state[:3].tolist()]
 
     @property
     def sun_velocity(self):
