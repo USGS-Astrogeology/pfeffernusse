@@ -4,10 +4,10 @@ import six
 from pfeffernusse.models.data import Data  # noqa: E501
 from pfeffernusse.models.isd200 import ISD200  # noqa: E501
 from pfeffernusse.models.request_isd import RequestISD  # noqa: E501
-from pfeffernusse import util
-from pfeffernusse import drivers
 
 from flask import current_app as app
+
+import ale
 
 def create_isd():  # noqa: E501
     """Converts Image Labels to ISDs
@@ -23,7 +23,7 @@ def create_isd():  # noqa: E501
         request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
 
     app.logger.info("Post Request: {}".format(request_isd))
-    return drivers.load(request_isd.label)
+    return ale.loads(request_isd.label)
 
 def get_metakernel(mission, year, version):  # noqa: E501
     """Get a specific kernel
