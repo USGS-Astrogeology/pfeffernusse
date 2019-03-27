@@ -6,4 +6,4 @@ numpy
 pvl
 spiceypy
 Flask-Testing
-ale >= 0.0.2
+ale >= 0.0.3
