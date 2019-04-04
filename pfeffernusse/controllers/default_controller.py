@@ -1,3 +1,5 @@
+import json
+
 import connexion
 import six
 
@@ -23,7 +25,8 @@ def create_isd():  # noqa: E501
         request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
 
     app.logger.info("Post Request: {}".format(request_isd))
-    return ale.loads(request_isd.label)
+    ale_string = ale.loads(request_isd.label)
+    return json.loads(ale_string)
 
 def get_metakernel(mission, year, version):  # noqa: E501
     """Get a specific kernel
