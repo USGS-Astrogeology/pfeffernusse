@@ -11,6 +11,25 @@ from flask import current_app as app
 
 import ale
 
+@app.after_request
+def apply_caching(response):
+    """
+    This sets the response for all responses. The response object
+    can be used to parse on a specific type if necessary.
+    """
+    # Convert all http to https requests to prevent man-in-the-middle attackes
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    # This should be a very strict policy to prevent any external injection - https://csp.withgoogle.com/docs/index.html
+    response.headers['Content-Security-Policy'] = "default-src 'self'"
+    # Force the browser to render the type we indicate
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # Prohibit embedding our site in external iframes
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    # If the post and response look like javascript, punt
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    # We could set cookies here, but since we are not using cookies, I think we are okay.
+    return response
+
 def create_isd():  # noqa: E501
     """Converts Image Labels to ISDs
 
