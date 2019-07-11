@@ -13,4 +13,4 @@ EXPOSE 8080
 
 ENTRYPOINT ["gunicorn"]
 
-CMD ["--bind", "0.0.0.0:8080", "pfeffernusse.wsgi"]
+CMD ["--bind", "0.0.0.0:8080", "-t", "60", "pfeffernusse.wsgi"]
