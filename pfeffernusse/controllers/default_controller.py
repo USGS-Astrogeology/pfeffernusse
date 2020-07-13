@@ -29,7 +29,7 @@ def create_isd():  # noqa: E501
     try:
         ale_string = ale.loads(request_isd.label)
     except Exception as e:
-        app.logger.info("Unable to generate isd from label")
+        app.logger.info(f"Unable to generate isd from label with error: {e}")
         ale_string = '{}'
 
     return json.loads(ale_string)
