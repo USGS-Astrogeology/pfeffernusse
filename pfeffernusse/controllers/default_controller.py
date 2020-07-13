@@ -25,12 +25,12 @@ def create_isd():  # noqa: E501
         request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
 
     app.logger.info("Post Request: {}".format(request_isd))
-    
+
     try:
         ale_string = ale.loads(request_isd.label)
     except Exception as e:
         app.logger.info("Unable to generate isd from label")
-        return {}
+        ale_string = '{}'
 
     return json.loads(ale_string)
 
