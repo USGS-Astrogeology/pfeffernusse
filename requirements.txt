@@ -9,3 +9,4 @@ spiceypy
 scipy
 Flask-Testing
 ale >= 0.8.0
+pytest
