@@ -50,7 +50,13 @@ def get_metakernel(mission, year, version):  # noqa: E501
     """
     if connexion.request.is_json:
         request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
-    return ale.util.get_metakernels(missions=mission, years=year, versions=version)
+    try:
+        metakernel = ale.util.get_metakernels(missions=mission, years=year, versions=version)
+    except Exception as e:
+        app.logger.info(f"Unable to retrieve metakernel for {mission}, " +
+                        f"{year}, {version}. Failed from ALE with: {e}")
+        metakernel = ""
+    return metakernel
 
 
 def metakernel_catalog():  # noqa: E501

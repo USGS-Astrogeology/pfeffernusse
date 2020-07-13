@@ -40,7 +40,7 @@ class TestDefaultController(BaseTestCase):
                         ('year', 'year_example'),
                         ('version', 'latest')]
         response = self.client.open(
-            '/v1/metalkernels/',
+            '/v1/metakernels/',
             method='GET',
             query_string=query_string)
         self.assert200(response,

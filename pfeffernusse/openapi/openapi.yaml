@@ -37,7 +37,7 @@ paths:
       summary: Converts Image Labels to ISDs
       x-swagger-router-controller: pfeffernusse.controllers.default_controller
       x-openapi-router-controller: pfeffernusse.controllers.default_controller
-  /metalkernels/:
+  /metakernels/:
     get:
       operationId: get_metakernel
       parameters:
