@@ -3,7 +3,6 @@ import json
 import connexion
 import six
 
-from pfeffernusse import util
 from pfeffernusse.models.data import Data  # noqa: E501
 from pfeffernusse.models.isd200 import ISD200  # noqa: E501
 from pfeffernusse.models.request_isd import RequestISD  # noqa: E501
