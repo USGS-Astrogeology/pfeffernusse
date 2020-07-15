@@ -12,8 +12,7 @@ from flask import current_app as app
 import ale
 
 def create_isd():  # noqa: E501
-    """
-    Converts Image Labels to ISDs
+    """Converts Image Labels to ISDs
 
     Adds an item to the system # noqa: E501
 
