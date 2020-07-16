@@ -14,4 +14,4 @@ EXPOSE 8080
 
 ENTRYPOINT ["gunicorn"]
 
-CMD ["--error-logfile", "/var/log/gunicorn/error.log", "--access-logfile", "/var/log/gunicorn/access.log", "--capture-output", "--log-level", "error", "--bind", "0.0.0.0:8080", "-t", "60", "pfeffernusse.wsgi"]
+CMD ["--error-logfile", "/var/log/gunicorn/error.log", "--access-logfile", "/var/log/gunicorn/access.log", "--capture-output", "--log-level", "debug", "--bind", "0.0.0.0:8080", "-t", "60", "pfeffernusse.wsgi"]

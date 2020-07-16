@@ -13,6 +13,8 @@ servers:
   description: Development server
 - url: http://pfeffer.wr.usgs.gov/v1
   description: Production server
+- url: https://astroservices.usgs.gov/pfeffer/
+  description: K8s server
 paths:
   /pds/:
     post:
