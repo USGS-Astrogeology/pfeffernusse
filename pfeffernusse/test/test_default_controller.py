@@ -12,17 +12,20 @@ from pfeffernusse.test import BaseTestCase
 
 
 class TestDefaultController(BaseTestCase):
-    """DefaultController integration test stubs"""
+    """
+    DefaultController integration test stubs
+    """
 
     def test_create_isd(self):
-        """Test case for create_isd
+        """
+        Test case for create_isd
 
         Converts Image Labels to ISDs
         """
         request_isd = RequestISD()
         response = self.client.open(
             '/v1/pds/',
-            method='GET',
+            method='POST',
             data=json.dumps(request_isd),
             content_type='application/json')
         self.assert200(response,
@@ -37,7 +40,7 @@ class TestDefaultController(BaseTestCase):
                         ('year', 'year_example'),
                         ('version', 'latest')]
         response = self.client.open(
-            '/v1/metalkernels/',
+            '/v1/metakernels/',
             method='GET',
             query_string=query_string)
         self.assert200(response,

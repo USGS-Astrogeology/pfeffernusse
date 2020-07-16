@@ -3,7 +3,10 @@ python_dateutil == 2.6.0
 setuptools >= 21.0.0
 gunicorn
 numpy
+networkx
 pvl
 spiceypy
+scipy
 Flask-Testing
-ale >= 0.0.4
+ale >= 0.8.3
+pytest

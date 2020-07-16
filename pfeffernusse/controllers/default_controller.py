@@ -25,7 +25,13 @@ def create_isd():  # noqa: E501
         request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
 
     app.logger.info("Post Request: {}".format(request_isd))
-    ale_string = ale.loads(request_isd.label)
+
+    try:
+        ale_string = ale.loads(request_isd.label)
+    except Exception as e:
+        app.logger.info(f"Unable to generate isd from label with error: {e}")
+        ale_string = '{}'
+
     return json.loads(ale_string)
 
 def get_metakernel(mission, year, version):  # noqa: E501
@@ -44,7 +50,8 @@ def get_metakernel(mission, year, version):  # noqa: E501
     """
     if connexion.request.is_json:
         request_isd = RequestISD.from_dict(connexion.request.get_json())  # noqa: E501
-    return util.get_metakernels(missions=mission, years=year, versions=version)
+
+    return ale.util.get_metakernels(missions=mission, years=year, versions=version)
 
 
 def metakernel_catalog():  # noqa: E501
