@@ -29,3 +29,6 @@ pfeffernusse/__main__.py
 **/__init__.py
 **/__main__.py
 Dockerfile
+README.md
+requirements.txt
+setup.py
