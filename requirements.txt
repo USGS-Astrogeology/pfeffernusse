@@ -8,5 +8,5 @@ pvl
 spiceypy
 scipy
 Flask-Testing
-ale >= 0.8.3
+ale
 pytest
